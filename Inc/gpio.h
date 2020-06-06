@@ -54,5 +54,7 @@ typedef enum
 } gpioPinState_t;
 
 void gpioInit(void);
+void gpioToggle(GPIO_TypeDef* gpioPort, uint32_t gpioPin);
+void gpioSet(GPIO_TypeDef* gpioPort, uint32_t gpioPin, gpioPinState_t gpioState);
 
 #endif /* GPIO_H_ */
