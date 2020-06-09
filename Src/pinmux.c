@@ -15,14 +15,7 @@
  */
 void pinmux(void)
 {
-    GpioConfig_t gpioConfig = { 0 };
-
-    gpioConfig.pin          = LED3_PIN | LED4_PIN | LED5_PIN | LED6_PIN;
-    gpioConfig.moder        = GPIO_OUTPUT_MODE;
-    gpioConfig.type         = GPIO_OUTPUT_PP;
-    gpioConfig.pull         = GPIO_NO_PULL;
-    gpioConfig.speed        = GPIO_SPEED_LOW;
-    gpioInit(GPIOC, &gpioConfig);
+    /* discuss if it's better to do all pinmuxing in one function or at the specific init functions (e.g. i2cInit, spiInit) */
 }
 
 

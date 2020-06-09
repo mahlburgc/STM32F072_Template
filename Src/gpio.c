@@ -6,7 +6,6 @@
  */
 
 
-#include "stdint.h"
 #include "stm32f0xx.h"
 #include "stm32f072xb.h"
 #include "gpio.h"
@@ -17,34 +16,33 @@
  */
 void gpioInit(GPIO_TypeDef* gpioPort, GpioConfig_t* gpioConfig)
 {
-    uint32_t gpioNr = 0; /* 0 ... 15 */
+    uint32_t gpioNr = 0U; /* 0 ... 15 */
 
-    while ((gpioConfig->pin >> gpioNr) != 0)
+    while ((gpioConfig->pin >> gpioNr) != 0U)
     {
-        if ((gpioConfig->pin >> gpioNr) & 0x01)
+        if ((gpioConfig->pin >> gpioNr) & 1U)
         {
             /* IO direction mode */
-            MODIFY_REG(gpioPort->MODER, (0x03 << (gpioNr * 2)), (gpioConfig->moder << (gpioNr * 2)));
+            MODIFY_REG(gpioPort->MODER, (0x03U << (gpioNr * 2U)), (gpioConfig->moder << (gpioNr * 2U)));
 
             /* output type */
             SET_BIT(gpioPort->OTYPER, (gpioConfig->type << gpioNr));
 
             /* gpio speed */
-            MODIFY_REG(gpioPort->OSPEEDR, (0x03 << (gpioNr * 2)), (gpioConfig->speed << (gpioNr * 2)));
+            MODIFY_REG(gpioPort->OSPEEDR, (0x03U << (gpioNr * 2U)), (gpioConfig->speed << (gpioNr * 2U)));
 
             /* pull-up / pull-down */
-            MODIFY_REG(gpioPort->PUPDR, (0x03 << (gpioNr * 2)), (gpioConfig->pull << (gpioNr * 2)));
+            MODIFY_REG(gpioPort->PUPDR, (0x03U << (gpioNr * 2U)), (gpioConfig->pull << (gpioNr * 2U)));
 
             /* configure alternate function, (gpio >> 3) turns to zero (gpio pin0 - pin7) or one (gpio pin8 - 15) */
-            MODIFY_REG(gpioPort->AFR[gpioNr >> 3], (0x07 << (gpioNr * 4)), (gpioConfig->alternate << (gpioNr * 4)));
-
+            MODIFY_REG(gpioPort->AFR[gpioNr >> 3U], (0x07U << (gpioNr * 4U)), (gpioConfig->alternate << (gpioNr * 4U)));
         }
         gpioNr++;
     }
 }
 
 /**
- * @brief This function toggles the gpio
+ * @brief This function toggles the gpio.
  */
 void gpioToggle(GPIO_TypeDef* gpioPort, uint32_t gpioPin)
 {
@@ -59,7 +57,7 @@ void gpioToggle(GPIO_TypeDef* gpioPort, uint32_t gpioPin)
 }
 
 /**
- * @brief This function sets the gpio output
+ * @brief This function sets the gpio output.
  */
 void gpioSet(GPIO_TypeDef* gpioPort, uint32_t gpioPin, gpioPinState_t gpioState)
 {
