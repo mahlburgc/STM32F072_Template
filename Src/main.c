@@ -23,6 +23,19 @@ int main(void)
 
     while(1U)
     {
+        /* first timer test */
+        const uint16_t delayTime = 0xFFFFU;
+
+        RCC->APB2ENR |= RCC_APB2ENR_TIM15EN; /* enable APB peripheral clock for TIM15 */
+
+        TIM15->SR = 0U;             /* clear status register */
+        TIM15->ARR = delayTime;     /* set auto-reload register */
+        TIM15->PSC = 300;           /* set prescale register */
+        TIM15->CR1 |= TIM_CR1_CEN;  /* enable counter */
+
+        while (!(TIM15->SR & TIM_SR_UIF));
+
+
         delay(100000U);
         gpioToggle(LED3_PORT, LED3_PIN);
         delay(100000U);
