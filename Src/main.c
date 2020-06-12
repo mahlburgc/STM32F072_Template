@@ -8,9 +8,14 @@
 #include "main.h"
 #include "stm32f072xb.h"
 #include "gpio.h"
+#include "tim.h"
+
+extern uint32_t SystemCoreClock;
 
 void sysInit(void);
 void sysGpioInit(void);
+void sysTimInit(void);
+void delay(const uint16_t delay_ms);
 
 /**
  * @brief  main loop
@@ -18,31 +23,24 @@ void sysGpioInit(void);
  */
 int main(void)
 {
+    const uint16_t LED_DELAY = 200; /* ms */
+
     sysInit();
     sysGpioInit();
+    sysTimInit();
 
     while(1U)
     {
-        /* first timer test */
-        const uint16_t delayTime = 0xFFFFU;
-
-        RCC->APB2ENR |= RCC_APB2ENR_TIM15EN; /* enable APB peripheral clock for TIM15 */
-
-        TIM15->SR = 0U;             /* clear status register */
-        TIM15->ARR = delayTime;     /* set auto-reload register */
-        TIM15->PSC = 300;           /* set prescale register */
-        TIM15->CR1 |= TIM_CR1_CEN;  /* enable counter */
-
-        while (!(TIM15->SR & TIM_SR_UIF));
-
-
-        delay(100000U);
+        delay(LED_DELAY);
         gpioToggle(LED3_PORT, LED3_PIN);
-        delay(100000U);
+
+        delay(LED_DELAY);
         gpioToggle(LED5_PORT, LED5_PIN);
-        delay(100000U);
+
+        delay(LED_DELAY);
         gpioToggle(LED4_PORT, LED4_PIN);
-        delay(100000U);
+
+        delay(LED_DELAY);
         gpioToggle(LED6_PORT, LED6_PIN);
     }
 }
@@ -63,8 +61,7 @@ void sysGpioInit(void)
 {
     GpioConfig_t gpioConfig = { 0 };
 
-    /* enable AHB peripheral clock for GPIOC */
-    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+    RCC_GPIOC_CLK_ENABLE();
 
     gpioConfig.pin          = LED3_PIN | LED4_PIN | LED5_PIN | LED6_PIN;
     gpioConfig.moder        = GPIO_OUTPUT_MODE;
@@ -74,4 +71,33 @@ void sysGpioInit(void)
     gpioInit(GPIOC, &gpioConfig);
 
     gpioSet(GPIOC, LED3_PIN | LED4_PIN | LED5_PIN | LED6_PIN, GPIO_PIN_SET);
+}
+
+/**
+ * @brief system timer initialization
+ */
+void sysTimInit(void)
+{
+    TimConfig_t timConfig = { 0 };
+
+    RCC_TIM15_CLK_ENABLE();
+
+    /* SystemClockCore is initialized with 8MHz by default, prescaler is configured for counting up in ms tick */
+    timConfig.ARR   = 0xFFFFU;
+    timConfig.PSC   = 0x1F40U; /* 8000000MHz / 1000ms = 1F401 */
+    timInit(TIM15, &timConfig);
+}
+
+/**
+ * @brief Timer delay in ms. Timer 15 is configured for counting from
+ * 0 to 65.535 ms.
+ */
+void delay(const uint16_t delay_ms)
+{
+    TIM15->ARR = delay_ms;
+
+    timReset(TIM15);
+    timStart(TIM15);
+    while (!timExceed(TIM15));
+    timStop(TIM15);
 }
