@@ -29,10 +29,13 @@ int main(void)
     sysGpioInit();
     sysTimInit();
 
+    timReset(TIM16);
+    timStart(TIM16); /* start timer for 1s interrupt */
+
     while(1U)
     {
-        delay(LED_DELAY);
-        gpioToggle(LED3_PORT, LED3_PIN);
+//        delay(LED_DELAY);
+//        gpioToggle(LED3_PORT, LED3_PIN);
 
         delay(LED_DELAY);
         gpioToggle(LED5_PORT, LED5_PIN);
@@ -80,12 +83,29 @@ void sysTimInit(void)
 {
     TimConfig_t timConfig = { 0 };
 
+    /**
+     * TIM 15 is used for delay
+     * SystemClockCore is initialized with 8MHz by default, prescaler is configured for counting up in ms tick
+     */
     RCC_TIM15_CLK_ENABLE();
 
-    /* SystemClockCore is initialized with 8MHz by default, prescaler is configured for counting up in ms tick */
     timConfig.ARR   = 0xFFFFU;
-    timConfig.PSC   = 0x1F40U; /* 8000000MHz / 1000ms = 1F401 */
+    timConfig.PSC   = 0x1F40U; /* 8000000MHz / 1000Hz = 1F40U -> 1ms tick*/
     timInit(TIM15, &timConfig);
+
+    /**
+     * TIM16 is used for 1s interrupt tick
+     * SystemClockCore is initialized with 8MHz by default, prescaler is configured for counting up in ms tick
+     */
+    RCC_TIM16_CLK_ENABLE();
+
+    timConfig.ARR   = 0x03E7U;      /* interrupt should be triggered every sec: 1000 - 1 -> 0x03E7U */
+    timConfig.PSC   = 0x1F40U;      /* 8000000MHz / 1000Hz = 0x1F40U -> 1ms tick */
+    timConfig.DIER  = TIM_DIER_UIE; /* enable TIM interrupt update */
+    timInit(TIM16, &timConfig);
+
+    NVIC_SetPriority(TIM16_IRQn, 0); /* in Cortex M0+ 2 bits are available to set interrupt priority -> priority 0(default) - 3 */
+    NVIC_EnableIRQ(TIM16_IRQn);
 }
 
 /**

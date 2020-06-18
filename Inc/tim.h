@@ -17,6 +17,8 @@
  */
 #define RCC_TIM15_CLK_ENABLE()     (RCC->APB2ENR |= RCC_APB2ENR_TIM15EN)
 #define RCC_TIM15_CLK_DISABLE()    (RCC->APB2ENR &= ~RCC_APB2ENR_TIM15EN)
+#define RCC_TIM16_CLK_ENABLE()     (RCC->APB2ENR |= RCC_APB2ENR_TIM16EN)
+#define RCC_TIM16_CLK_DISABLE()    (RCC->APB2ENR &= ~RCC_APB2ENR_TIM16EN)
 
 /**
  * @brief timer confi
@@ -25,6 +27,7 @@ typedef struct
 {
     uint32_t ARR;   /* auto reload register */
     uint32_t PSC;   /* prescale value */
+    uint32_t DIER;  /* DMA / interrupt enable register */
 } TimConfig_t;
 
 /**

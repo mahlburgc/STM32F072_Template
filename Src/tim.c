@@ -12,7 +12,8 @@
  */
 void timInit(TIM_TypeDef* TIM, const TimConfig_t* timConfig)
 {
-    TIM->SR  = 0U;                  /* clear status register */
-    TIM->ARR = timConfig->ARR;      /* set auto-reload register */
-    TIM->PSC = timConfig->PSC;      /* set prescale register */
+    TIM->SR   = 0U;                  /* clear status register */
+    TIM->ARR  = timConfig->ARR;      /* set auto-reload register */
+    TIM->PSC  = timConfig->PSC;      /* set prescale register */
+    TIM->DIER = timConfig->DIER;     /* set DMA/interrupt enable register */
 }
