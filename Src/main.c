@@ -10,12 +10,12 @@
 #include "gpio.h"
 #include "tim.h"
 
-extern uint32_t SystemCoreClock;
+uint32_t g_sysTick = 0U; /* global system Tick in ms */
 
 void sysInit(void);
 void sysGpioInit(void);
 void sysTimInit(void);
-void delay(const uint16_t delay_ms);
+void delay(const uint32_t DELAY);
 
 /**
  * @brief  main loop
@@ -23,7 +23,7 @@ void delay(const uint16_t delay_ms);
  */
 int main(void)
 {
-    const uint16_t LED_DELAY = 200; /* ms */
+    const uint16_t LED_DELAY = 200U; /* ms */
 
     sysInit();
     sysGpioInit();
@@ -53,8 +53,10 @@ int main(void)
  */
 void sysInit(void)
 {
-    /* Enable the FLASH prefetch buffer */
-    FLASH->ACR |= FLASH_ACR_PRFTBE;
+    FLASH->ACR |= FLASH_ACR_PRFTBE;          /* Enable the FLASH prefetch buffer */
+
+    SystemCoreClockUpdate();
+    SysTick_Config(SystemCoreClock / 1000U); /* configure SysTick_Handler to 1ms interrupt */
 }
 
 /**
@@ -84,40 +86,38 @@ void sysTimInit(void)
     TimConfig_t timConfig = { 0 };
 
     /**
-     * TIM 15 is used for delay
-     * SystemClockCore is initialized with 8MHz by default, prescaler is configured for counting up in ms tick
+     * TIM15 can be used for casual start stop functionality.
      */
     RCC_TIM15_CLK_ENABLE();
 
     timConfig.ARR   = 0xFFFFU;
-    timConfig.PSC   = 0x1F40U; /* 8000000MHz / 1000Hz = 1F40U -> 1ms tick*/
+    timConfig.PSC   = 8000U;             /* 8000000MHz / 1000Hz = 1F40U -> 1ms tick*/
     timInit(TIM15, &timConfig);
 
     /**
-     * TIM16 is used for 1s interrupt tick
-     * SystemClockCore is initialized with 8MHz by default, prescaler is configured for counting up in ms tick
+     * TIM16 is used for 1s interrupt tick.
      */
     RCC_TIM16_CLK_ENABLE();
 
-    timConfig.ARR   = 0x03E7U;      /* interrupt should be triggered every sec: 1000 - 1 -> 0x03E7U */
-    timConfig.PSC   = 0x1F40U;      /* 8000000MHz / 1000Hz = 0x1F40U -> 1ms tick */
-    timConfig.DIER  = TIM_DIER_UIE; /* enable TIM interrupt update */
+    timConfig.ARR   = 100U;              /* interrupt should be triggered every sec: 1000 - 1*/
+    timConfig.PSC   = 8000U;             /* 8000000MHz / 1000Hz = 8000 -> 1ms tick */
+    timConfig.DIER  = TIM_DIER_UIE;     /* enable TIM interrupt update */
     timInit(TIM16, &timConfig);
 
-    NVIC_SetPriority(TIM16_IRQn, 0); /* in Cortex M0+ 2 bits are available to set interrupt priority -> priority 0(default) - 3 */
+    NVIC_SetPriority(TIM16_IRQn, 0U);   /* in Cortex M0+ 2 bits are available to set interrupt priority -> priority 0(default) - 3 */
     NVIC_EnableIRQ(TIM16_IRQn);
 }
 
 /**
- * @brief Timer delay in ms. Timer 15 is configured for counting from
- * 0 to 65.535 ms.
+ * @brief delay in ms.
+ *        Therefore g_sysTick is used, which is counting up in SysTick_Handler.
+ *        IMPORTANT: This function is not save if device is running longer than 49 days
+ *        because g_sysTick will start from zero btw. TIME + DELAY > UINT32_MAX -> Overflow,
+ *        value will be very small so g_sysTick < (TIME + DELAY) is immediately false.
  */
-void delay(const uint16_t delay_ms)
+void delay(const uint32_t DELAY)
 {
-    TIM15->ARR = delay_ms;
+    const uint32_t TIME = g_sysTick;
 
-    timReset(TIM15);
-    timStart(TIM15);
-    while (!timExceed(TIM15));
-    timStop(TIM15);
+    while (g_sysTick < (TIME + DELAY));
 }
