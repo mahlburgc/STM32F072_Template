@@ -12,6 +12,12 @@
 #include "stm32f072xb.h"
 
 /**
+ * @brief GPIO port clock enable / disable
+ */
+#define RCC_GPIOC_CLK_ENABLE()      (RCC->AHBENR |= RCC_AHBENR_GPIOCEN)     /* enable AHB peripheral clock for GPIOC */
+#define RCC_GPIOC_CLK_DISABLE()     (RCC->AHBENR &= ~RCC_AHBENR_GPIOCEN)    /* disable AHB peripheral clock for GPIOC */
+
+/**
  * @brief GPIO definitions
  */
 #define GPIO_PIN_0          (uint16_t)0x0001U

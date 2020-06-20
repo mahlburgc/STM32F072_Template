@@ -22,12 +22,6 @@
 #define LED6_PORT           GPIOC
 #define LED6_PIN            GPIO_PIN_9
 
-/**
- * Wait for number of ticks
- */
-static inline void delay(uint32_t ticks)
-{
-    for(uint32_t i = 0U;  i < ticks; i++);
-}
+void delay(const uint32_t DELAY);
 
 #endif /* MAIN_H_ */
