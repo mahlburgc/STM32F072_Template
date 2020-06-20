@@ -14,6 +14,8 @@
 /**
  * @brief GPIO port clock enable / disable
  */
+#define RCC_GPIOA_CLK_ENABLE()      (RCC->AHBENR |= RCC_AHBENR_GPIOAEN)     /* enable AHB peripheral clock for GPIOA */
+#define RCC_GPIOA_CLK_DISABLE()      (RCC->AHBENR &= ~RCC_AHBENR_GPIOAEN)     /* disable AHB peripheral clock for GPIOA */
 #define RCC_GPIOC_CLK_ENABLE()      (RCC->AHBENR |= RCC_AHBENR_GPIOCEN)     /* enable AHB peripheral clock for GPIOC */
 #define RCC_GPIOC_CLK_DISABLE()     (RCC->AHBENR &= ~RCC_AHBENR_GPIOCEN)    /* disable AHB peripheral clock for GPIOC */
 
@@ -42,8 +44,8 @@
  */
 #define GPIO_INPUT_MODE     (uint32_t)0x00U
 #define GPIO_OUTPUT_MODE    (uint32_t)0x01U
-#define GPIO_ALTERNATE_MODE (uint32_t)0x10U
-#define GPIO_ANALOG_MODE    (uint32_t)0x11U
+#define GPIO_ALTERNATE_MODE (uint32_t)0x02U
+#define GPIO_ANALOG_MODE    (uint32_t)0x03U
 
 /**
  * @brief GPIO push pull / open drain

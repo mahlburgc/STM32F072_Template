@@ -10,6 +10,7 @@
 #include "main.h"
 #include "led.h"
 #include "gpio.h"
+#include "usart.h"
 
 FsmLedState_t g_ledState = LED_STATE_FIRST;
 
@@ -18,6 +19,10 @@ void ledTask(void)
     static FsmLedState_t ledStateOld = LED_STATE_LAST;
 
     while (g_ledState == ledStateOld); /* wait for FSM state changing */
+
+
+    const uint8_t dbgMsg[] = "Test\r\n";
+    usartTransmit(USART1, dbgMsg, sizeof(dbgMsg));
 
     /* simple state machine, state is changed by TIM16 interrupt */
     switch (g_ledState)
