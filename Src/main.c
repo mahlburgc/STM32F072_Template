@@ -9,13 +9,13 @@
 #include "stm32f072xb.h"
 #include "gpio.h"
 #include "tim.h"
+#include "led.h"
 
 uint32_t g_sysTick = 0U; /* global system Tick in ms */
 
 void sysInit(void);
 void sysGpioInit(void);
 void sysTimInit(void);
-void delay(const uint32_t DELAY);
 
 /**
  * @brief  main loop
@@ -23,8 +23,6 @@ void delay(const uint32_t DELAY);
  */
 int main(void)
 {
-    const uint16_t LED_DELAY = 200U; /* ms */
-
     sysInit();
     sysGpioInit();
     sysTimInit();
@@ -34,17 +32,7 @@ int main(void)
 
     while(1U)
     {
-//        delay(LED_DELAY);
-//        gpioToggle(LED3_PORT, LED3_PIN);
-
-        delay(LED_DELAY);
-        gpioToggle(LED5_PORT, LED5_PIN);
-
-        delay(LED_DELAY);
-        gpioToggle(LED4_PORT, LED4_PIN);
-
-        delay(LED_DELAY);
-        gpioToggle(LED6_PORT, LED6_PIN);
+        ledTask();
     }
 }
 
@@ -99,7 +87,7 @@ void sysTimInit(void)
      */
     RCC_TIM16_CLK_ENABLE();
 
-    timConfig.ARR   = 100U;              /* interrupt should be triggered every sec: 1000 - 1*/
+    timConfig.ARR   = 199U;              /* interrupt should be triggered every sec: 1000 - 1*/
     timConfig.PSC   = 8000U;             /* 8000000MHz / 1000Hz = 8000 -> 1ms tick */
     timConfig.DIER  = TIM_DIER_UIE;     /* enable TIM interrupt update */
     timInit(TIM16, &timConfig);

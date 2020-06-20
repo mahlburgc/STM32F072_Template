@@ -8,6 +8,8 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
+#include "stdint.h"
+
 /**
  * @brief user defines
  */
@@ -19,5 +21,7 @@
 #define LED5_PIN            GPIO_PIN_8
 #define LED6_PORT           GPIOC
 #define LED6_PIN            GPIO_PIN_9
+
+void delay(const uint32_t DELAY);
 
 #endif /* MAIN_H_ */

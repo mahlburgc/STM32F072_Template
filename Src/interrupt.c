@@ -9,8 +9,10 @@
 
 #include "main.h"
 #include "gpio.h"
+#include "led.h"
 
 extern uint32_t g_sysTick;
+extern FsmLedState_t g_ledState;
 
 /**
  * @brief System Tick
@@ -28,7 +30,11 @@ void TIM16_IRQHandler(void)
 {
     if (TIM_SR_CC1IF == (TIM16->SR & TIM_SR_CC1IF)) /* check CC1 interrupt flag */
     {
-        gpioToggle(LED3_PORT, LED3_PIN);
+        g_ledState++;
+        if (g_ledState > LED_STATE_LAST)
+        {
+            g_ledState = LED_STATE_FIRST;
+        }
     }
     TIM16->SR = 0;                                  /* clear status register */
 }
