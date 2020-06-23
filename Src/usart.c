@@ -77,3 +77,14 @@ static uint8_t usartReceive8Bit(USART_TypeDef* usart)
 
     return (uint8_t)usart->RDR;
 }
+
+/**
+ * @brief usart receive with interrupt
+ *        This functions activates an interrupt on every character reception.
+ *        This can be used to collect a number of characters on usart rx line.
+ */
+void usartReceiveIT(USART_TypeDef* usart)
+{
+    usart->CR1 |= USART_CR1_RXNEIE; /* enable rx not empty interrupt */
+    usart->CR3 |= USART_CR3_EIE;    /* enable error interrupts framing error, overrun error or noise flag (FE=1 or ORE=1 or NF=1 in the USART_ISR register). */
+}

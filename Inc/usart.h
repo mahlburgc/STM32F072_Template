@@ -96,5 +96,6 @@ static inline void usartRxDisable(USART_TypeDef* usart)
 void usartInit(USART_TypeDef* usart, const UsartConfig_t* conf);
 void usartTransmit(USART_TypeDef* usart, const uint32_t size, const uint8_t* data);
 void usartReceive(USART_TypeDef* usart, const uint32_t size, uint8_t* const data);
+void usartReceiveIT(USART_TypeDef* usart);
 
 #endif /* USART_H_ */

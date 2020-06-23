@@ -11,6 +11,7 @@
 #include "tim.h"
 #include "led.h"
 #include "usart.h"
+#include "serialCom.h"
 
 uint32_t g_sysTick = 0U; /* global system Tick in ms */
 
@@ -38,10 +39,12 @@ int main(void)
     usartEnable(USART1);
     usartTxEnable(USART1);
     usartRxEnable(USART1);
+    usartReceiveIT(USART1);
 
     while(1U)
     {
         ledTask();
+        serialComTask();
     }
 }
 
@@ -131,6 +134,9 @@ void sysUsartInit(void)
     usartConfig.M1M0    = USART_WORD_LENGTH_8;
     usartConfig.STOP    = USART_STOP_BITS_1;
     usartInit(USART1, &usartConfig);
+
+    NVIC_SetPriority(USART1_IRQn, 0U);   /* in Cortex M0+ 2 bits are available to set interrupt priority -> priority 0(default) - 3 */
+    NVIC_EnableIRQ(USART1_IRQn);
 }
 
 /**

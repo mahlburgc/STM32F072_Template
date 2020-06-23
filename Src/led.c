@@ -14,45 +14,34 @@
 #include "usart.h"
 #include "debug.h"
 #include "misc.h"
+#include "tim.h"
 
-FsmLedState_t g_ledState = LED_STATE_FIRST;
+FsmLedState_t g_ledState = LED_STATE_LAST;
 
 void ledTask(void)
 {
     static FsmLedState_t ledStateOld = LED_STATE_LAST;
-    static uint32_t i_testCounter    = 0;                           /* DEBUG */
-    static int32_t si_testCounter    = 0;                           /* DEBUG */
-    static float f_testCounter       = 0;                           /* DEBUG */
-    uint8_t rxBuffer[20]             = { 0 };                       /* DEBUG */
 
-    while (g_ledState == ledStateOld);                              /* wait for FSM state changing */
-
-    print("Test\r\n");                                                                  /* DEBUG */
-    printArg("Test with Arg\r\n");                                                      /* DEBUG */
-    printArg("Test with int counter: %d\r\n", i_testCounter);                           /* DEBUG */
-    printArg("Test signed: %d unsigned: %d\r\n", si_testCounter, i_testCounter);        /* DEBUG */
-    usartReceive(USART1, (ARRAY_LEN(rxBuffer) - 1), rxBuffer);                                /* DEBUG */
-    printArg("Received message: %s\r\n\r\n", (char*)rxBuffer);                          /* DEBUG */
-
-    /* simple state machine, state is changed by TIM16 interrupt */
-    switch (g_ledState)
+    /* check for FSM state changing */
+    if (g_ledState != ledStateOld)
     {
-    case LED_STATE_FIRST:
-        gpioToggle(LED3_PORT, LED3_PIN);
-        break;
-    case LED_STATE_TWO:
-        gpioToggle(LED5_PORT, LED5_PIN);
-        break;
-    case LED_STATE_THREE:
-        gpioToggle(LED4_PORT, LED4_PIN);
-        break;
-    case LED_STATE_LAST:
-        gpioToggle(LED6_PORT, LED6_PIN);
-        break;
-    }
+        /* simple state machine, state is changed by TIM16 interrupt */
+        switch (g_ledState)
+        {
+        case LED_STATE_FIRST:
+            gpioToggle(LED3_PORT, LED3_PIN);
+            break;
+        case LED_STATE_TWO:
+            gpioToggle(LED5_PORT, LED5_PIN);
+            break;
+        case LED_STATE_THREE:
+            gpioToggle(LED4_PORT, LED4_PIN);
+            break;
+        case LED_STATE_LAST:
+            gpioToggle(LED6_PORT, LED6_PIN);
+            break;
+        }
 
-    ledStateOld = g_ledState;
-    i_testCounter++;        /* DEBUG */
-    si_testCounter--;       /* DEBUG */
-    f_testCounter -= 3.1;   /* DEBUG */
+        ledStateOld = g_ledState;
+    }
 }

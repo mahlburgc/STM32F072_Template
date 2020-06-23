@@ -5,13 +5,14 @@
  *      Author: Christian
  */
 
-#ifndef ERROR_H_
-#define ERROR_H_
+#ifndef DEBUG_H_
+#define DEBUG_H_
 
 #include "usart.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include "misc.h"
 
 #define MAX_DBG_SIZE    80  /* max debug message size */
 
@@ -42,4 +43,4 @@ static inline void printArg(char* format,...)
     va_end(argptr);
 }
 
-#endif /* ERROR_H_ */
+#endif /* DEBUG_H_ */
