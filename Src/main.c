@@ -37,6 +37,7 @@ int main(void)
     /* enable usart transmission for debug messages */
     usartEnable(USART1);
     usartTxEnable(USART1);
+    usartRxEnable(USART1);
 
     while(1U)
     {

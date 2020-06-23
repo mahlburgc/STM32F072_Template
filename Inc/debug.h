@@ -20,7 +20,7 @@
  */
 static inline void print(const char* dbgMsg)
 {
-    usartTransmit(USART1, (uint8_t*)dbgMsg, strnlen(dbgMsg, MAX_DBG_SIZE));
+    usartTransmit(USART1, strnlen(dbgMsg, MAX_DBG_SIZE), (uint8_t*)dbgMsg);
 }
 
 /**
@@ -38,7 +38,7 @@ static inline void printArg(char* format,...)
     va_start(argptr, format);
     vsnprintf(buffer, MAX_DBG_SIZE, format, argptr);
 
-    usartTransmit(USART1, (uint8_t*)buffer, strnlen(buffer, MAX_DBG_SIZE));
+    usartTransmit(USART1, strnlen(buffer, MAX_DBG_SIZE), (uint8_t*)buffer);
     va_end(argptr);
 }
 

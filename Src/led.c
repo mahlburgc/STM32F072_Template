@@ -13,6 +13,7 @@
 #include "gpio.h"
 #include "usart.h"
 #include "debug.h"
+#include "misc.h"
 
 FsmLedState_t g_ledState = LED_STATE_FIRST;
 
@@ -22,6 +23,7 @@ void ledTask(void)
     static uint32_t i_testCounter    = 0;                           /* DEBUG */
     static int32_t si_testCounter    = 0;                           /* DEBUG */
     static float f_testCounter       = 0;                           /* DEBUG */
+    uint8_t rxBuffer[20]             = { 0 };                       /* DEBUG */
 
     while (g_ledState == ledStateOld);                              /* wait for FSM state changing */
 
@@ -29,6 +31,8 @@ void ledTask(void)
     printArg("Test with Arg\r\n");                                                      /* DEBUG */
     printArg("Test with int counter: %d\r\n", i_testCounter);                           /* DEBUG */
     printArg("Test signed: %d unsigned: %d\r\n", si_testCounter, i_testCounter);        /* DEBUG */
+    usartReceive(USART1, (ARRAY_LEN(rxBuffer) - 1), rxBuffer);                                /* DEBUG */
+    printArg("Received message: %s\r\n\r\n", (char*)rxBuffer);                          /* DEBUG */
 
     /* simple state machine, state is changed by TIM16 interrupt */
     switch (g_ledState)

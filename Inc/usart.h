@@ -31,10 +31,11 @@
 #define USART_PARITY_ODD        (uint32_t)(0x01U << 10U)
 
 /**
- * @brief USART enable and transmission enable (CR1)
+ * @brief USART enable and transmission enable and receive enable (CR1)
  */
 #define USART_EN                (uint32_t)(0x01U << 0U)
 #define USART_TX_EN             (uint32_t)(0x01U << 3U)
+#define USART_RX_EN             (uint32_t)(0x01U << 2U)
 
 /**
  * @brief USART STOP bits (CR2)
@@ -82,7 +83,18 @@ static inline void usartTxDisable(USART_TypeDef* usart)
     usart->CR1 &= ~USART_TX_EN;
 }
 
+static inline void usartRxEnable(USART_TypeDef* usart)
+{
+    usart->CR1 |= USART_RX_EN;
+}
+
+static inline void usartRxDisable(USART_TypeDef* usart)
+{
+    usart->CR1 &= ~USART_RX_EN;
+}
+
 void usartInit(USART_TypeDef* usart, const UsartConfig_t* conf);
-void usartTransmit(USART_TypeDef* usart, const uint8_t* data, const uint32_t size);
+void usartTransmit(USART_TypeDef* usart, const uint32_t size, const uint8_t* data);
+void usartReceive(USART_TypeDef* usart, const uint32_t size, uint8_t* const data);
 
 #endif /* USART_H_ */

@@ -10,6 +10,7 @@
 #include "usart.h"
 
 static void usartTransmit8Bit(USART_TypeDef* usart, const uint8_t data);
+static uint8_t usartReceive8Bit(USART_TypeDef* usart);
 
 /**
  * @brief basic usart initialization
@@ -30,7 +31,7 @@ void usartInit(USART_TypeDef* usart, const UsartConfig_t* conf)
  * @brief usart transmission
  *        To use this function, usart and usart transmission must be enabled first!
  */
-void usartTransmit(USART_TypeDef* usart, const uint8_t* data, const uint32_t size)
+void usartTransmit(USART_TypeDef* usart, const uint32_t size, const uint8_t* data)
 {
     for (uint32_t i = 0; i < size; i++)
     {
@@ -48,3 +49,31 @@ static void usartTransmit8Bit(USART_TypeDef* usart, const uint8_t data)
     while (USART_TX_COMPLETE != (usart->ISR & USART_TX_COMPLETE)); /* wait for transmission complete */
 }
 
+/**
+ * @brief usart reception
+ *        To use this function, usart and usart reception must be enabled first!
+ */
+void usartReceive(USART_TypeDef* usart, const uint32_t size, uint8_t* const data)
+{
+    for (uint32_t i = 0; i < size; i++)
+    {
+        data[i] = usartReceive8Bit(usart);
+    }
+}
+
+/**
+ * @brief usart 8Bit receive (without parity bit)
+ */
+static uint8_t usartReceive8Bit(USART_TypeDef* usart)
+{
+//    while (USART_ISR_BUSY != (usart->ISR & USART_ISR_BUSY)); /* wait for start of reception, TODO Timeout */
+
+    if (USART_ISR_ORE == (usart->ISR & USART_ISR_ORE)) /* if overrun was detected, reset overrun bit */
+    {
+        usart->ICR |= USART_ICR_ORECF;
+    }
+
+    while (USART_ISR_RXNE != (usart->ISR & USART_ISR_RXNE)); /* wait for end of reception, TODO Timeout*/
+
+    return (uint8_t)usart->RDR;
+}
