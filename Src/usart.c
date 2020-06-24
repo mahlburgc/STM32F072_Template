@@ -17,6 +17,9 @@ static uint8_t usartReceive8Bit(USART_TypeDef* usart);
  */
 void usartInit(USART_TypeDef* usart, const UsartConfig_t* conf)
 {
+    ASSERT(IS_USART_INSTANCE(usart));
+    ASSERT(0U != conf);
+
     /* set word length and parity config */
     usart->CR1 = (conf->M1M0 | conf->PCE | conf->PS);
 
@@ -33,6 +36,9 @@ void usartInit(USART_TypeDef* usart, const UsartConfig_t* conf)
  */
 void usartTransmit(USART_TypeDef* usart, const uint32_t size, const uint8_t* data)
 {
+    ASSERT(IS_USART_INSTANCE(usart));
+    ASSERT(0U != data);
+
     for (uint32_t i = 0; i < size; i++)
     {
         usartTransmit8Bit(usart, data[i]);
@@ -44,6 +50,8 @@ void usartTransmit(USART_TypeDef* usart, const uint32_t size, const uint8_t* dat
  */
 static void usartTransmit8Bit(USART_TypeDef* usart, const uint8_t data)
 {
+    ASSERT(IS_USART_INSTANCE(usart));
+
     usart->TDR = data;
 
     while (USART_TX_COMPLETE != (usart->ISR & USART_TX_COMPLETE)); /* wait for transmission complete */
@@ -55,6 +63,9 @@ static void usartTransmit8Bit(USART_TypeDef* usart, const uint8_t data)
  */
 void usartReceive(USART_TypeDef* usart, const uint32_t size, uint8_t* const data)
 {
+    ASSERT(IS_USART_INSTANCE(usart));
+    ASSERT(0U != data);
+
     for (uint32_t i = 0; i < size; i++)
     {
         data[i] = usartReceive8Bit(usart);
@@ -66,7 +77,7 @@ void usartReceive(USART_TypeDef* usart, const uint32_t size, uint8_t* const data
  */
 static uint8_t usartReceive8Bit(USART_TypeDef* usart)
 {
-//    while (USART_ISR_BUSY != (usart->ISR & USART_ISR_BUSY)); /* wait for start of reception, TODO Timeout */
+    ASSERT(IS_USART_INSTANCE(usart));
 
     if (USART_ISR_ORE == (usart->ISR & USART_ISR_ORE)) /* if overrun was detected, reset overrun bit */
     {
@@ -85,6 +96,8 @@ static uint8_t usartReceive8Bit(USART_TypeDef* usart)
  */
 void usartReceiveIT(USART_TypeDef* usart)
 {
+    ASSERT(IS_USART_INSTANCE(usart));
+
     usart->CR1 |= USART_CR1_RXNEIE; /* enable rx not empty interrupt */
     usart->CR3 |= USART_CR3_EIE;    /* enable error interrupts framing error, overrun error or noise flag (FE=1 or ORE=1 or NF=1 in the USART_ISR register). */
 }

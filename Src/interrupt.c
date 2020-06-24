@@ -7,11 +7,13 @@
  *  This file contains the definition of the interrupt service routines.
  */
 
+#include <string.h>
 #include "main.h"
 #include "gpio.h"
 #include "led.h"
 #include "debug.h"
 #include "serialCom.h"
+#include "error.h"
 
 extern uint32_t g_sysTick;
 extern FsmLedState_t g_ledState;
@@ -49,6 +51,13 @@ void USART1_IRQHandler(void)
 {
     static RxBuffer_t rxBuffer = { 0 };
 
+    /* check overrun error flag */
+    if (USART_ISR_ORE == (USART1->ISR & USART_ISR_ORE))
+    {
+        ERROR(g_err.ERR_USART1_BUFFER_OVERFLOW);
+        USART1->ICR |= USART_ICR_ORECF;
+    }
+
     /* check rx not empty flag */
     if (USART_ISR_RXNE == (USART1->ISR & USART_ISR_RXNE))
     {
@@ -61,12 +70,5 @@ void USART1_IRQHandler(void)
             memcpy(g_rxMsg.data, rxBuffer.data, sizeof(g_rxMsg.data));
             g_rxMsg.rxComplete = true;
         }
-    }
-
-    /* check overrun error flag */
-    if (USART_ISR_ORE == (USART1->ISR & USART_ISR_ORE))
-    {
-        USART1->ICR |= USART_ICR_ORECF;
-        /* TODO error handling */
     }
 }
