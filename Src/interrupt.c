@@ -10,9 +10,12 @@
 #include "main.h"
 #include "gpio.h"
 #include "led.h"
+#include "debug.h"
+#include "serialCom.h"
 
 extern uint32_t g_sysTick;
 extern FsmLedState_t g_ledState;
+extern RxMsg_t g_rxMsg;
 
 /**
  * @brief System Tick
@@ -37,4 +40,33 @@ void TIM16_IRQHandler(void)
         }
     }
     TIM16->SR = 0;                                  /* clear status register */
+}
+
+/**
+ * @brief USART 1 ISR
+ */
+void USART1_IRQHandler(void)
+{
+    static RxBuffer_t rxBuffer = { 0 };
+
+    /* check rx not empty flag */
+    if (USART_ISR_RXNE == (USART1->ISR & USART_ISR_RXNE))
+    {
+        rxBuffer.data[rxBuffer.index] = USART1->RDR;
+        rxBuffer.index++;
+
+        if (rxBuffer.index == ARRAY_LEN(rxBuffer.data))
+        {
+            rxBuffer.index = 0;
+            memcpy(g_rxMsg.data, rxBuffer.data, sizeof(g_rxMsg.data));
+            g_rxMsg.rxComplete = true;
+        }
+    }
+
+    /* check overrun error flag */
+    if (USART_ISR_ORE == (USART1->ISR & USART_ISR_ORE))
+    {
+        USART1->ICR |= USART_ICR_ORECF;
+        /* TODO error handling */
+    }
 }

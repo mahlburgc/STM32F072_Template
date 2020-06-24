@@ -21,7 +21,7 @@
 #define RCC_TIM16_CLK_DISABLE()    (RCC->APB2ENR &= ~RCC_APB2ENR_TIM16EN)
 
 /**
- * @brief timer confi
+ * @brief timer config
  */
 typedef struct
 {

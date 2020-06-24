@@ -8,6 +8,8 @@
 #ifndef LED_H_
 #define LED_H_
 
+#define LED_RX_BUFFER_SIZE 80
+
 typedef enum
 {
     LED_STATE_FIRST,

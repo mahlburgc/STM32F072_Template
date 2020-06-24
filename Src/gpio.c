@@ -35,7 +35,7 @@ void gpioInit(GPIO_TypeDef* gpioPort, GpioConfig_t* gpioConfig)
             MODIFY_REG(gpioPort->PUPDR, (0x03U << (gpioNr * 2U)), (gpioConfig->pull << (gpioNr * 2U)));
 
             /* configure alternate function, (gpio >> 3) turns to zero (gpio pin0 - pin7) or one (gpio pin8 - 15) */
-            MODIFY_REG(gpioPort->AFR[gpioNr >> 3U], (0x07U << (gpioNr * 4U)), (gpioConfig->alternate << (gpioNr * 4U)));
+            MODIFY_REG(gpioPort->AFR[gpioNr >> 3U], (0x0FU << ((gpioNr & 0x07U) * 4U)), (gpioConfig->alternate << ((gpioNr & 0x07U) * 4U)));
         }
         gpioNr++;
     }

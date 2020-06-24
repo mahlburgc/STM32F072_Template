@@ -10,12 +10,15 @@
 #include "gpio.h"
 #include "tim.h"
 #include "led.h"
+#include "usart.h"
+#include "serialCom.h"
 
 uint32_t g_sysTick = 0U; /* global system Tick in ms */
 
 void sysInit(void);
 void sysGpioInit(void);
 void sysTimInit(void);
+void sysUsartInit(void);
 
 /**
  * @brief  main loop
@@ -26,13 +29,22 @@ int main(void)
     sysInit();
     sysGpioInit();
     sysTimInit();
+    sysUsartInit();
 
+    /* start timer for 1s interrupt */
     timReset(TIM16);
-    timStart(TIM16); /* start timer for 1s interrupt */
+    timStart(TIM16);
+
+    /* enable usart transmission for debug messages */
+    usartEnable(USART1);
+    usartTxEnable(USART1);
+    usartRxEnable(USART1);
+    usartReceiveIT(USART1);
 
     while(1U)
     {
         ledTask();
+        serialComTask();
     }
 }
 
@@ -94,6 +106,37 @@ void sysTimInit(void)
 
     NVIC_SetPriority(TIM16_IRQn, 0U);   /* in Cortex M0+ 2 bits are available to set interrupt priority -> priority 0(default) - 3 */
     NVIC_EnableIRQ(TIM16_IRQn);
+}
+
+/**
+ * @brief system usart initialization
+ */
+void sysUsartInit(void)
+{
+    GpioConfig_t gpioConfig   = { 0 };
+    UsartConfig_t usartConfig = { 0 };
+
+    /**
+     * USART1 initialization for serial transmit to host
+     */
+    RCC_USART1_CLK_ENABLE();
+    RCC_GPIOA_CLK_ENABLE();
+
+    gpioConfig.pin          = GPIO_PIN_9 | GPIO_PIN_10;
+    gpioConfig.moder        = GPIO_ALTERNATE_MODE;
+    gpioConfig.alternate    = GPIO_AF1;
+    gpioConfig.pull         = GPIO_NO_PULL;
+    gpioConfig.speed        = GPIO_SPEED_HIGH;
+    gpioConfig.type         = GPIO_OUTPUT_PP;
+    gpioInit(GPIOA, &gpioConfig);
+
+    usartConfig.BRR     = 0x341U; /* from HAL: (((__PCLK__) + ((__BAUD__)/2U)) / (__BAUD__)) -> (8000000 + (9600 / 2)) / 9600*/
+    usartConfig.M1M0    = USART_WORD_LENGTH_8;
+    usartConfig.STOP    = USART_STOP_BITS_1;
+    usartInit(USART1, &usartConfig);
+
+    NVIC_SetPriority(USART1_IRQn, 0U);   /* in Cortex M0+ 2 bits are available to set interrupt priority -> priority 0(default) - 3 */
+    NVIC_EnableIRQ(USART1_IRQn);
 }
 
 /**
