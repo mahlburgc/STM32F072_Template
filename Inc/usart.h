@@ -9,6 +9,7 @@
 #define USART_H_
 
 #include "stm32f072xb.h"
+#include "error.h"
 
 /**
  * @brief USART port clock enable / disable
@@ -65,31 +66,43 @@ typedef struct
 
 static inline void usartEnable(USART_TypeDef* usart)
 {
+    ASSERT(IS_USART_INSTANCE(usart));
+
     usart->CR1 |= USART_EN;
 }
 
 static inline void usartDisable(USART_TypeDef* usart)
 {
+    ASSERT(IS_USART_INSTANCE(usart));
+
     usart->CR1 &= ~USART_EN;
 }
 
 static inline void usartTxEnable(USART_TypeDef* usart)
 {
+    ASSERT(IS_USART_INSTANCE(usart));
+
     usart->CR1 |= USART_TX_EN;
 }
 
 static inline void usartTxDisable(USART_TypeDef* usart)
 {
+    ASSERT(IS_USART_INSTANCE(usart));
+
     usart->CR1 &= ~USART_TX_EN;
 }
 
 static inline void usartRxEnable(USART_TypeDef* usart)
 {
+    ASSERT(IS_USART_INSTANCE(usart));
+
     usart->CR1 |= USART_RX_EN;
 }
 
 static inline void usartRxDisable(USART_TypeDef* usart)
 {
+    ASSERT(IS_USART_INSTANCE(usart));
+
     usart->CR1 &= ~USART_RX_EN;
 }
 

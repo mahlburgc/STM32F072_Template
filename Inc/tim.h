@@ -11,6 +11,7 @@
 #include "stdint.h"
 #include "stm32f072xb.h"
 #include "misc.h"
+#include "error.h"
 
 /**
  * TIM clock enable / disable
@@ -35,6 +36,8 @@ typedef struct
  */
 static inline void timStart(TIM_TypeDef* TIM)
 {
+    ASSERT(IS_TIM_INSTANCE(TIM));
+
     TIM->CR1 |= TIM_CR1_CEN;
 }
 
@@ -43,6 +46,8 @@ static inline void timStart(TIM_TypeDef* TIM)
  */
 static inline void timStop(TIM_TypeDef* TIM)
 {
+    ASSERT(IS_TIM_INSTANCE(TIM));
+
     TIM->CR1 &= ~TIM_CR1_CEN;
 }
 
@@ -51,6 +56,8 @@ static inline void timStop(TIM_TypeDef* TIM)
  */
 static inline void timReset(TIM_TypeDef* TIM)
 {
+    ASSERT(IS_TIM_INSTANCE(TIM));
+
     TIM->SR  = 0U; /* reset status register */
     TIM->CNT = 0U; /* reset count register */
 }
@@ -60,6 +67,8 @@ static inline void timReset(TIM_TypeDef* TIM)
  */
 static inline bool timExceed(TIM_TypeDef* TIM)
 {
+    ASSERT(IS_TIM_INSTANCE(TIM));
+
     if (TIM_SR_UIF == (TIM->SR & TIM_SR_UIF))
     {
         return true;

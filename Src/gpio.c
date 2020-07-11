@@ -9,6 +9,7 @@
 #include "stm32f0xx.h"
 #include "stm32f072xb.h"
 #include "gpio.h"
+#include "error.h"
 
 
 /**
@@ -16,6 +17,9 @@
  */
 void gpioInit(GPIO_TypeDef* gpioPort, GpioConfig_t* gpioConfig)
 {
+    ASSERT(IS_GPIO_ALL_INSTANCE(gpioPort));
+    ASSERT(0U != gpioConfig);
+
     uint32_t gpioNr = 0U; /* 0 ... 15 */
 
     while ((gpioConfig->pin >> gpioNr) != 0U)
@@ -46,6 +50,8 @@ void gpioInit(GPIO_TypeDef* gpioPort, GpioConfig_t* gpioConfig)
  */
 void gpioToggle(GPIO_TypeDef* gpioPort, uint32_t gpioPin)
 {
+    ASSERT(IS_GPIO_ALL_INSTANCE(gpioPort));
+
     if (gpioPin == (gpioPort->ODR & gpioPin))
     {
         gpioPort->BRR |= gpioPin; /* reset output to low */
@@ -61,6 +67,8 @@ void gpioToggle(GPIO_TypeDef* gpioPort, uint32_t gpioPin)
  */
 void gpioSet(GPIO_TypeDef* gpioPort, uint32_t gpioPin, gpioPinState_t gpioState)
 {
+    ASSERT(IS_GPIO_ALL_INSTANCE(gpioPort));
+
     if (GPIO_PIN_SET == gpioState)
     {
         gpioPort->BSRR  |= gpioPin;
