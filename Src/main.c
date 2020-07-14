@@ -1,10 +1,37 @@
-/**
- ******************************************************************************
+/********************************************************************************
  * @file           : main.c
  * @author         : Christian Mahlburg
- * @brief          : Main program body
- ******************************************************************************/
+ * @date           : 23.06.2020
+ * @brief          : Main program body.
+ *
+ ********************************************************************************
+ * MIT License
+ *
+ * Copyright (c) 2020 CMA
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ ********************************************************************************/
 
+/********************************************************************************
+ * includes
+ ********************************************************************************/
 #include "main.h"
 #include "stm32f072xb.h"
 #include "gpio.h"
@@ -13,45 +40,26 @@
 #include "usart.h"
 #include "serialCom.h"
 
+/********************************************************************************
+ * static function prototypes
+ ********************************************************************************/
+static void sysInit(void);
+static void sysGpioInit(void);
+static void sysTimInit(void);
+static void sysUsartInit(void);
+
+/********************************************************************************
+ * public variables
+ ********************************************************************************/
 uint32_t g_sysTick = 0U; /* global system Tick in ms */
 
-void sysInit(void);
-void sysGpioInit(void);
-void sysTimInit(void);
-void sysUsartInit(void);
-
-/**
- * @brief  main loop
- *         Main program to test implementation without using HAL.
- */
-int main(void)
-{
-    sysInit();
-    sysGpioInit();
-    sysTimInit();
-    sysUsartInit();
-
-    /* start timer for 1s interrupt */
-    timReset(TIM16);
-    timStart(TIM16);
-
-    /* enable usart transmission for debug messages */
-    usartEnable(USART1);
-    usartTxEnable(USART1);
-    usartRxEnable(USART1);
-    usartReceiveIT(USART1);
-
-    while(1U)
-    {
-        ledTask();
-        serialComTask();
-    }
-}
-
+/********************************************************************************
+ * static functions
+ ********************************************************************************/
 /**
  * @brief system initialization
  */
-void sysInit(void)
+static void sysInit(void)
 {
     FLASH->ACR |= FLASH_ACR_PRFTBE;          /* Enable the FLASH prefetch buffer */
 
@@ -62,7 +70,7 @@ void sysInit(void)
 /**
  * @brief system gpio initialization
  */
-void sysGpioInit(void)
+static void sysGpioInit(void)
 {
     GpioConfig_t gpioConfig = { 0 };
 
@@ -81,7 +89,7 @@ void sysGpioInit(void)
 /**
  * @brief system timer initialization
  */
-void sysTimInit(void)
+static void sysTimInit(void)
 {
     TimConfig_t timConfig = { 0 };
 
@@ -111,7 +119,7 @@ void sysTimInit(void)
 /**
  * @brief system usart initialization
  */
-void sysUsartInit(void)
+static void sysUsartInit(void)
 {
     GpioConfig_t gpioConfig   = { 0 };
     UsartConfig_t usartConfig = { 0 };
@@ -137,6 +145,37 @@ void sysUsartInit(void)
 
     NVIC_SetPriority(USART1_IRQn, 0U);   /* in Cortex M0+ 2 bits are available to set interrupt priority -> priority 0(default) - 3 */
     NVIC_EnableIRQ(USART1_IRQn);
+}
+
+/********************************************************************************
+ * public functions
+ ********************************************************************************/
+/**
+ * @brief  main loop
+ *         Main program to test implementation without using HAL.
+ */
+int main(void)
+{
+    sysInit();
+    sysGpioInit();
+    sysTimInit();
+    sysUsartInit();
+
+    /* start timer for 1s interrupt */
+    timReset(TIM16);
+    timStart(TIM16);
+
+    /* enable usart transmission for debug messages */
+    usartEnable(USART1);
+    usartTxEnable(USART1);
+    usartRxEnable(USART1);
+    usartReceiveIT(USART1);
+
+    while(1U)
+    {
+        ledTask();
+        serialComTask();
+    }
 }
 
 /**

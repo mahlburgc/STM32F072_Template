@@ -1,16 +1,45 @@
-/*
- * usart.h
+/********************************************************************************
+ * @file           : usart.h
+ * @author         : Christian Mahlburg
+ * @date           : 20.06.2020
+ * @brief          :
  *
- *  Created on: 20.06.2020
- *      Author: cma
- */
-
+ ********************************************************************************
+ * MIT License
+ *
+ * Copyright (c) 2020 CMA
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ ********************************************************************************/
 #ifndef USART_H_
 #define USART_H_
 
+/********************************************************************************
+ * includes
+ ********************************************************************************/
 #include "stm32f072xb.h"
 #include "error.h"
 
+/********************************************************************************
+ * defines
+ ********************************************************************************/
 /**
  * @brief USART port clock enable / disable
  */
@@ -52,6 +81,9 @@
 #define USART_TX_COMPLETE       (uint32_t)(0x01U << 6U)
 #define USART_TX_DATA_REG_EMPTY (uint32_t)(0x01U << 7U)
 
+/********************************************************************************
+ * public types and variables
+ ********************************************************************************/
 /**
  * @brief USART configuration struct with very basic configuration to transmit usart messages
  */
@@ -64,6 +96,17 @@ typedef struct
     uint32_t BRR;       /* baud rate, can only be written when the USART is disabled (UE=0) */
 } UsartConfig_t;
 
+/********************************************************************************
+ * public function prototypes
+ ********************************************************************************/
+void usartInit(USART_TypeDef* usart, const UsartConfig_t* conf);
+void usartTransmit(USART_TypeDef* usart, const uint32_t size, const uint8_t* data);
+void usartReceive(USART_TypeDef* usart, const uint32_t size, uint8_t* const data);
+void usartReceiveIT(USART_TypeDef* usart);
+
+/********************************************************************************
+ * public function prototypes
+ ********************************************************************************/
 static inline void usartEnable(USART_TypeDef* usart)
 {
     ASSERT(IS_USART_INSTANCE(usart));
@@ -105,10 +148,5 @@ static inline void usartRxDisable(USART_TypeDef* usart)
 
     usart->CR1 &= ~USART_RX_EN;
 }
-
-void usartInit(USART_TypeDef* usart, const UsartConfig_t* conf);
-void usartTransmit(USART_TypeDef* usart, const uint32_t size, const uint8_t* data);
-void usartReceive(USART_TypeDef* usart, const uint32_t size, uint8_t* const data);
-void usartReceiveIT(USART_TypeDef* usart);
 
 #endif /* USART_H_ */

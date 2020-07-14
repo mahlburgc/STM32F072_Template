@@ -1,17 +1,80 @@
-/*
- * usart.c
+/********************************************************************************
+ * @file           : usart.c
+ * @author         : Christian Mahlburg
+ * @date           : 20.06.2020
+ * @brief          : This module implements a basic usart driver for communication.
  *
- *  Created on: 20.06.2020
- *      Author: cma
+ ********************************************************************************
+ * MIT License
  *
- *      This module implements a basic usart driver for communication.
- */
+ * Copyright (c) 2020 CMA
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ ********************************************************************************/
 
+/********************************************************************************
+ * includes
+ ********************************************************************************/
 #include "usart.h"
 
+/********************************************************************************
+ * static function prototypes
+ ********************************************************************************/
 static void usartTransmit8Bit(USART_TypeDef* usart, const uint8_t data);
 static uint8_t usartReceive8Bit(USART_TypeDef* usart);
 
+/********************************************************************************
+ * static functions
+ ********************************************************************************/
+/**
+ * @brief usart 8Bit transmission
+ */
+static void usartTransmit8Bit(USART_TypeDef* usart, const uint8_t data)
+{
+    ASSERT(IS_USART_INSTANCE(usart));
+
+    usart->TDR = data;
+
+    while (USART_TX_COMPLETE != (usart->ISR & USART_TX_COMPLETE)); /* wait for transmission complete */
+}
+
+/**
+ * @brief usart 8Bit receive (without parity bit)
+ */
+static uint8_t usartReceive8Bit(USART_TypeDef* usart)
+{
+    ASSERT(IS_USART_INSTANCE(usart));
+
+    if (USART_ISR_ORE == (usart->ISR & USART_ISR_ORE)) /* if overrun was detected, reset overrun bit */
+    {
+        usart->ICR |= USART_ICR_ORECF;
+    }
+
+    while (USART_ISR_RXNE != (usart->ISR & USART_ISR_RXNE)); /* wait for end of reception, TODO Timeout*/
+
+    return (uint8_t)usart->RDR;
+}
+
+/********************************************************************************
+ * public functions
+ ********************************************************************************/
 /**
  * @brief basic usart initialization
  */
@@ -46,18 +109,6 @@ void usartTransmit(USART_TypeDef* usart, const uint32_t size, const uint8_t* dat
 }
 
 /**
- * @brief usart 8Bit transmission
- */
-static void usartTransmit8Bit(USART_TypeDef* usart, const uint8_t data)
-{
-    ASSERT(IS_USART_INSTANCE(usart));
-
-    usart->TDR = data;
-
-    while (USART_TX_COMPLETE != (usart->ISR & USART_TX_COMPLETE)); /* wait for transmission complete */
-}
-
-/**
  * @brief usart reception
  *        To use this function, usart and usart reception must be enabled first!
  */
@@ -70,23 +121,6 @@ void usartReceive(USART_TypeDef* usart, const uint32_t size, uint8_t* const data
     {
         data[i] = usartReceive8Bit(usart);
     }
-}
-
-/**
- * @brief usart 8Bit receive (without parity bit)
- */
-static uint8_t usartReceive8Bit(USART_TypeDef* usart)
-{
-    ASSERT(IS_USART_INSTANCE(usart));
-
-    if (USART_ISR_ORE == (usart->ISR & USART_ISR_ORE)) /* if overrun was detected, reset overrun bit */
-    {
-        usart->ICR |= USART_ICR_ORECF;
-    }
-
-    while (USART_ISR_RXNE != (usart->ISR & USART_ISR_RXNE)); /* wait for end of reception, TODO Timeout*/
-
-    return (uint8_t)usart->RDR;
 }
 
 /**
