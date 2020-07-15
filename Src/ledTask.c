@@ -1,8 +1,8 @@
 /********************************************************************************
- * @file           : led.h
+ * @file           : ledTask.c
  * @author         : Christian Mahlburg
  * @date           : 20.06.2020
- * @brief          :
+ * @brief          : This file contains the ledTask and related functions.
  *
  ********************************************************************************
  * MIT License
@@ -28,32 +28,51 @@
  * SOFTWARE.
  *
  ********************************************************************************/
-#ifndef LED_H_
-#define LED_H_
 
 /********************************************************************************
  * includes
  ********************************************************************************/
+#include "ledTask.h"
+#include "stdio.h"
+#include "main.h"
+#include "gpio.h"
+#include "usart.h"
+#include "debug.h"
+#include "misc.h"
+#include "tim.h"
 
 /********************************************************************************
- * defines
+ * public variables
  ********************************************************************************/
-#define LED_RX_BUFFER_SIZE 80
+FsmLedState_t g_ledState = LED_STATE_LAST;
 
 /********************************************************************************
- * public types and variables
+ * public functions
  ********************************************************************************/
-typedef enum
+void ledTask(void)
 {
-    LED_STATE_FIRST,
-    LED_STATE_TWO,
-    LED_STATE_THREE,
-    LED_STATE_LAST,
-} FsmLedState_t;
+    static FsmLedState_t ledStateOld = LED_STATE_LAST;
 
-/********************************************************************************
- * public function prototypes
- ********************************************************************************/
-void ledTask(void);
+    /* check for FSM state changing */
+    if (g_ledState != ledStateOld)
+    {
+        /* simple state machine, state is changed by TIM16 interrupt */
+        switch (g_ledState)
+        {
+        case LED_STATE_FIRST:
+            gpioToggle(LED3_PORT, LED3_PIN);
+            break;
+        case LED_STATE_TWO:
+            gpioToggle(LED5_PORT, LED5_PIN);
+            break;
+        case LED_STATE_THREE:
+            gpioToggle(LED4_PORT, LED4_PIN);
+            break;
+        case LED_STATE_LAST:
+            gpioToggle(LED6_PORT, LED6_PIN);
+            break;
+        }
 
-#endif /* LED_H_ */
+        ledStateOld = g_ledState;
+    }
+}

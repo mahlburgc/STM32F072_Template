@@ -1,8 +1,8 @@
 /********************************************************************************
- * @file           : interrupt.c
+ * @file           : serialTask.h
  * @author         : Christian Mahlburg
- * @date           : 18.06.2020
- * @brief          : This file contains all interrupt service routines.
+ * @date           : 23.06.2020
+ * @brief          :
  *
  ********************************************************************************
  * MIT License
@@ -28,78 +28,44 @@
  * SOFTWARE.
  *
  ********************************************************************************/
+#ifndef SERIAL_TASK_H_
+#define SERIAL_TASK_H_
 
 /********************************************************************************
  * includes
  ********************************************************************************/
-#include <ledTask.h>
-#include <serialTask.h>
-#include <string.h>
-#include "main.h"
-#include "gpio.h"
-#include "debug.h"
-#include "error.h"
+#include "stdint.h"
+#include "misc.h"
 
 /********************************************************************************
- * public variables
+ * defines
  ********************************************************************************/
-extern uint32_t g_sysTick;
-extern FsmLedState_t g_ledState;
-extern RxMsg_t g_rxMsg;
+#define RX_BUFFER_SIZE 1
 
 /********************************************************************************
- * public functions
+ * public types and variables
  ********************************************************************************/
 /**
- * @brief System Tick
- *        SysTick_Handler is triggered by SYSCLK which should be usually configured to 1ms.
+ * @brief USART rxBuffer type for interrupt reception
  */
-void SysTick_Handler(void)
+typedef struct
 {
-    g_sysTick++;
-}
+    uint8_t data[RX_BUFFER_SIZE];
+    uint32_t index;
+} RxBuffer_t;
 
 /**
- * @brief Timer 16 ISR
+ * @breif USART rxMsg type for received message
  */
-void TIM16_IRQHandler(void)
+typedef struct
 {
-    if (TIM_SR_CC1IF == (TIM16->SR & TIM_SR_CC1IF)) /* check CC1 interrupt flag */
-    {
-        g_ledState++;
-        if (g_ledState > LED_STATE_LAST)
-        {
-            g_ledState = LED_STATE_FIRST;
-        }
-    }
-    TIM16->SR = 0;                                  /* clear status register */
-}
+    uint8_t data[RX_BUFFER_SIZE];
+    bool rxComplete;
+} RxMsg_t;
 
-/**
- * @brief USART 1 ISR
- */
-void USART1_IRQHandler(void)
-{
-    static RxBuffer_t rxBuffer = { 0 };
+/********************************************************************************
+ * public function prototypes
+ ********************************************************************************/
+void serialComTask(void);
 
-    /* check overrun error flag */
-    if (USART_ISR_ORE == (USART1->ISR & USART_ISR_ORE))
-    {
-        ERROR(g_err.ERR_USART1_BUFFER_OVERFLOW);
-        USART1->ICR |= USART_ICR_ORECF;
-    }
-
-    /* check rx not empty flag */
-    if (USART_ISR_RXNE == (USART1->ISR & USART_ISR_RXNE))
-    {
-        rxBuffer.data[rxBuffer.index] = USART1->RDR;
-        rxBuffer.index++;
-
-        if (rxBuffer.index == ARRAY_LEN(rxBuffer.data))
-        {
-            rxBuffer.index = 0;
-            memcpy(g_rxMsg.data, rxBuffer.data, sizeof(g_rxMsg.data));
-            g_rxMsg.rxComplete = true;
-        }
-    }
-}
+#endif /* SERIAL_TASK_H_ */

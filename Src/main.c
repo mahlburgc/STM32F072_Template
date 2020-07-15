@@ -32,13 +32,15 @@
 /********************************************************************************
  * includes
  ********************************************************************************/
+#include "ledTask.h"
+#include "serialTask.h"
+#include "memsTask.h"
 #include "main.h"
 #include "stm32f072xb.h"
 #include "gpio.h"
 #include "tim.h"
-#include "led.h"
 #include "usart.h"
-#include "serialCom.h"
+#include "spi.h"
 
 /********************************************************************************
  * static function prototypes
@@ -47,6 +49,7 @@ static void sysInit(void);
 static void sysGpioInit(void);
 static void sysTimInit(void);
 static void sysUsartInit(void);
+static void sysSpiInit(void);
 
 /********************************************************************************
  * public variables
@@ -147,6 +150,39 @@ static void sysUsartInit(void)
     NVIC_EnableIRQ(USART1_IRQn);
 }
 
+/**
+ * @brief system spi initialization
+ */
+static void sysSpiInit(void)
+{
+    GpioConfig_t gpioConfig = { 0 };
+    SpiConfig_t spiConfig   = { 0 };
+
+    /**
+     * SPI2 initialization for communication with MEMS sensor
+     */
+    RCC_GPIOB_CLK_ENABLE();
+    RCC_GPIOC_CLK_ENABLE();
+    RCC_SPI2_CLK_ENABLE();
+
+    gpioConfig.pin          = GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15;
+    gpioConfig.moder        = GPIO_ALTERNATE_MODE;
+    gpioConfig.alternate    = GPIO_AF0;
+    gpioConfig.speed        = GPIO_SPEED_HIGH;
+    gpioInit(GPIOB, &gpioConfig);
+
+    /* chip select */
+    gpioConfig.pin          = GPIO_PIN_0;
+    gpioConfig.moder        = GPIO_OUTPUT_MODE;
+    gpioConfig.speed        = GPIO_SPEED_HIGH;
+    gpioInit(GPIOC, &gpioConfig);
+
+    spiConfig.masterMode    = SPI_MODE_MASTER;
+    spiConfig.baudPrescale  = SPI_BAUD_PRESCALE_16;
+    spiConfig.dataLength    = SPI_DATASIZE_8BIT;
+    spiInit(SPI2, &spiConfig);
+}
+
 /********************************************************************************
  * public functions
  ********************************************************************************/
@@ -160,6 +196,7 @@ int main(void)
     sysGpioInit();
     sysTimInit();
     sysUsartInit();
+    sysSpiInit();
 
     /* start timer for 1s interrupt */
     timReset(TIM16);
@@ -175,6 +212,7 @@ int main(void)
     {
         ledTask();
         serialComTask();
+        memsSensorTask();
     }
 }
 

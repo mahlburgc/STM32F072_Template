@@ -41,12 +41,14 @@
  * defines
  ********************************************************************************/
 /**
- * @brief GPIO port clock enable / disable
+ * @brief GPIO port AHB peripheral clock enable / disable
  */
-#define RCC_GPIOA_CLK_ENABLE()      (RCC->AHBENR |= RCC_AHBENR_GPIOAEN)     /* enable AHB peripheral clock for GPIOA */
-#define RCC_GPIOA_CLK_DISABLE()      (RCC->AHBENR &= ~RCC_AHBENR_GPIOAEN)     /* disable AHB peripheral clock for GPIOA */
-#define RCC_GPIOC_CLK_ENABLE()      (RCC->AHBENR |= RCC_AHBENR_GPIOCEN)     /* enable AHB peripheral clock for GPIOC */
-#define RCC_GPIOC_CLK_DISABLE()     (RCC->AHBENR &= ~RCC_AHBENR_GPIOCEN)    /* disable AHB peripheral clock for GPIOC */
+#define RCC_GPIOA_CLK_ENABLE()      (RCC->AHBENR |=  RCC_AHBENR_GPIOAEN)
+#define RCC_GPIOA_CLK_DISABLE()     (RCC->AHBENR &= ~RCC_AHBENR_GPIOAEN)
+#define RCC_GPIOB_CLK_ENABLE()      (RCC->AHBENR |=  RCC_AHBENR_GPIOBEN)
+#define RCC_GPIOB_CLK_DISABLE()     (RCC->AHBENR &= ~RCC_AHBENR_GPIOBEN)
+#define RCC_GPIOC_CLK_ENABLE()      (RCC->AHBENR |=  RCC_AHBENR_GPIOCEN)
+#define RCC_GPIOC_CLK_DISABLE()     (RCC->AHBENR &= ~RCC_AHBENR_GPIOCEN)
 
 /**
  * @brief GPIO definitions
