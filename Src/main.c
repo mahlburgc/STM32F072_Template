@@ -41,6 +41,7 @@
 #include "tim.h"
 #include "usart.h"
 #include "spi.h"
+#include "i2c.h"
 
 /********************************************************************************
  * static function prototypes
@@ -50,6 +51,7 @@ static void sysGpioInit(void);
 static void sysTimInit(void);
 static void sysUsartInit(void);
 static void sysSpiInit(void);
+static void sysI2cInit(void);
 
 /********************************************************************************
  * public variables
@@ -183,6 +185,32 @@ static void sysSpiInit(void)
     spiInit(SPI2, &spiConfig);
 }
 
+/**
+ * @brief system i2c initialization
+ */
+static void sysI2cInit(void)
+{
+    GpioConfig_t gpioConfig = { 0 };
+    I2cConfig_t i2cConfig   = { 0 };
+
+    /**
+     * I2C1 master to slave configuration for communication with eeprom
+     */
+    RCC_GPIOB_CLK_ENABLE();
+    RCC_I2C1_CLK_ENABLE();
+
+    /* PB6 -> I2C1 SCL, PB7 -> I2C1 SDA */
+    gpioConfig.pin          = GPIO_PIN_6  | GPIO_PIN_7;
+    gpioConfig.moder        = GPIO_ALTERNATE_MODE;
+    gpioConfig.alternate    = GPIO_AF1;
+    gpioConfig.speed        = GPIO_SPEED_HIGH;
+    gpioInit(GPIOB, &gpioConfig);
+
+    i2cConfig.timing         = 0x2000090EU; /* from CubeMX, can also be calculated by referring to I2C initialization in f0 ref man */
+    i2cConfig.addressingMode = I2C_ADDRESSINGMODE_7BIT;
+    i2cInit(I2C1, &i2cConfig);
+}
+
 /********************************************************************************
  * public functions
  ********************************************************************************/
@@ -197,6 +225,7 @@ int main(void)
     sysTimInit();
     sysUsartInit();
     sysSpiInit();
+    sysI2cInit();
 
     /* start timer for 1s interrupt */
     timReset(TIM16);
