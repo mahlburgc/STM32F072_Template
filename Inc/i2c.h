@@ -36,6 +36,7 @@
  ********************************************************************************/
 #include "stm32f072xb.h"
 #include "error.h"
+#include "misc.h"
 
 /********************************************************************************
  * defines
@@ -51,8 +52,8 @@
 /**
  * @brief I2C slave address mode (CR2)
  */
-#define I2C_ADDRESSINGMODE_7BIT     (uint32_t)(0x01U << 11U)
-#define I2C_ADDRESSINGMODE_10BIT    (uint32_t)(0x02U << 11U)
+#define I2C_ADDRESSINGMODE_7BIT     (uint32_t)(0x00U << 11U)
+#define I2C_ADDRESSINGMODE_10BIT    (uint32_t)(0x01U << 11U)
 
 /**
  * @brief Timing clear mask, used to clear reserved bits in TIMINGR
@@ -75,6 +76,8 @@ typedef struct
  * public function prototypes
  ********************************************************************************/
 void i2cInit(I2C_TypeDef* i2c, const I2cConfig_t* conf);
+bool i2cIsReady(I2C_TypeDef* i2c, const uint32_t devAddress);
+
 
 /********************************************************************************
  * public inline functions

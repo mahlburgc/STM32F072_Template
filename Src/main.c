@@ -237,6 +237,10 @@ int main(void)
     usartRxEnable(USART1);
     usartReceiveIT(USART1);
 
+    /* enable i2c master communication */
+    i2cEnable(I2C1);
+    i2cIsReady(I2C1, 0xA0); /* DBG Test */
+
     while(1U)
     {
         ledTask();

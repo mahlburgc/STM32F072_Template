@@ -61,6 +61,26 @@
  */
 void i2cInit(I2C_TypeDef* i2c, const I2cConfig_t* conf)
 {
-    i2c->CR2     |= conf->addressingMode;
+    i2c->CR2      = conf->addressingMode | I2C_CR2_AUTOEND;
     i2c->TIMINGR  = conf->timing & TIMING_CLEAR_MASK;
+}
+
+
+/**
+ * @brief check is i2c device is ready
+ */
+bool i2cIsReady(I2C_TypeDef* i2c, const uint32_t devAddress)
+{
+    bool deviceIsReady = false;
+
+    i2c->CR2  = (i2c->CR2 & ~I2C_CR2_SADD_Msk) | devAddress;   /* set device address */
+    i2c->CR2 |= I2C_CR2_START;                                 /* enable start condition */
+
+    if((IS_BIT_SET(i2c->ISR, I2C_ISR_STOPF) == SET) &&
+       (IS_BIT_SET(i2c->ISR, I2C_ISR_NACKF) == RESET))
+    {
+        deviceIsReady = true;
+    }
+
+    return deviceIsReady;
 }

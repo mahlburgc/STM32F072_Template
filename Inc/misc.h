@@ -34,6 +34,7 @@
 /********************************************************************************
  * includes
  ********************************************************************************/
+#include "stm32f0xx.h"
 
 /********************************************************************************
  * defines
@@ -42,6 +43,11 @@
  * @brief calcucalte array length
  */
 #define ARRAY_LEN(x) (sizeof(x)/sizeof(x[0]))
+
+/**
+ * @brief check if a bit/flag is set in register
+ */
+#define IS_BIT_SET(REG, BIT) ((REG & BIT) == (BIT) ? SET : RESET)
 
 /********************************************************************************
  * public types and variables
