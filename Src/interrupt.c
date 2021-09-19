@@ -63,21 +63,9 @@ void SysTick_Handler(void)
  */
 void TIM16_IRQHandler(void)
 {
-    static FsmState_t currentState = FSM_STATE_ONE;
-
     if (TIM_SR_CC1IF == (TIM16->SR & TIM_SR_CC1IF)) /* check CC1 interrupt flag */
     {
-        currentState = fsm_getCurrentState();
-
-        if (currentState >= (FSM_NUM_STATES - 1))
-        {
-            currentState = FSM_STATE_ONE;
-        }
-        else
-        {
-            currentState++;
-        }
-        fsm_setNextState(currentState);
+        fsm_interruptTriggered();
     }
     TIM16->SR = 0;                                  /* clear status register */
 }

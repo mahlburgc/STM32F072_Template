@@ -57,7 +57,7 @@ typedef enum
  * public function prototypes
  ********************************************************************************/
 void ledTask(void);
-void fsm_setNextState(FsmState_t stateNext);
+void fsm_interruptTriggered(void);
 FsmState_t fsm_getCurrentState(void);
 
 #endif /* LED_TASK_H_ */

@@ -44,20 +44,28 @@
 /********************************************************************************
  * public variables
  ********************************************************************************/
-static FsmState_t fsm_stateCurrent = FSM_STATE_FOUR;
-static FsmState_t fsm_stateNext = FSM_STATE_ONE;
+bool interruptTriggered = false;
 
 typedef struct
 {
     uint8_t payload;
 } FsmInstanceData_t;
 
-typedef void FsmStateFunc_t (FsmInstanceData_t* data);
+typedef FsmState_t FsmStateFunc_t(FsmInstanceData_t* data);
+typedef void       FsmTransitionFunc_t(FsmInstanceData_t* data );
 
-void do_state_one(FsmInstanceData_t* data);
-void do_state_two(FsmInstanceData_t* data);
-void do_state_three(FsmInstanceData_t* data);
-void do_state_four(FsmInstanceData_t* data);
+/* state event function prototypes*/
+FsmState_t do_state_one(FsmInstanceData_t* data);
+FsmState_t do_state_two(FsmInstanceData_t* data);
+FsmState_t do_state_three(FsmInstanceData_t* data);
+FsmState_t do_state_four(FsmInstanceData_t* data);
+
+/* transition function prototypes */
+void do_one_to_two(FsmInstanceData_t *data);
+void do_two_to_three(FsmInstanceData_t *data);
+void do_three_to_four(FsmInstanceData_t *data);
+void do_four_to_one(FsmInstanceData_t *data);
+
 
 FsmStateFunc_t* const fsm_stateTable[FSM_NUM_STATES] =
 {
@@ -67,43 +75,101 @@ FsmStateFunc_t* const fsm_stateTable[FSM_NUM_STATES] =
         do_state_four,
 };
 
-void fsm_run(FsmInstanceData_t* data)
+FsmTransitionFunc_t * const fsm_transitionTable[FSM_NUM_STATES][FSM_NUM_STATES] =
 {
-    if (fsm_stateNext != fsm_stateCurrent)
+    { NULL,              do_one_to_two,     NULL,            NULL             },
+    { NULL,              NULL,              do_two_to_three, NULL             },
+    { NULL,              NULL,              NULL,            do_three_to_four },
+    { do_four_to_one,    NULL,              NULL,            NULL             },
+
+};
+
+FsmState_t fsm_run(FsmState_t stateCurrent, FsmInstanceData_t* data)
+{
+    FsmState_t stateNext            = fsm_stateTable[stateCurrent](data);
+    FsmTransitionFunc_t* transition = fsm_transitionTable[stateCurrent][stateNext];
+
+    if (NULL != transition)
     {
-        fsm_stateCurrent = fsm_stateNext;
-        fsm_stateTable[fsm_stateCurrent](data);
+        transition(data);
     }
+
+    return stateNext;
 }
 
-void fsm_setNextState(FsmState_t stateNext)
-{
-    fsm_stateNext = stateNext;
-}
-
-FsmState_t fsm_getCurrentState(void)
-{
-    return fsm_stateCurrent;
-}
-
-void do_state_one(FsmInstanceData_t* data)
-{
-    gpioToggle(LED3_PORT, LED3_PIN);
-}
-
-void do_state_two(FsmInstanceData_t* data)
+/* transitions */
+void do_one_to_two(FsmInstanceData_t *data)
 {
     gpioToggle(LED5_PORT, LED5_PIN);
 }
 
-void do_state_three(FsmInstanceData_t* data)
+void do_two_to_three(FsmInstanceData_t *data)
 {
     gpioToggle(LED4_PORT, LED4_PIN);
 }
 
-void do_state_four(FsmInstanceData_t* data)
+void do_three_to_four(FsmInstanceData_t *data)
 {
     gpioToggle(LED6_PORT, LED6_PIN);
+}
+
+void do_four_to_one(FsmInstanceData_t *data)
+{
+    gpioToggle(LED3_PORT, LED3_PIN);
+}
+
+/* state events */
+FsmState_t do_state_one(FsmInstanceData_t* data)
+{
+    FsmState_t nextState = FSM_STATE_ONE;
+
+    if (interruptTriggered)
+    {
+        nextState = FSM_STATE_TWO;
+        interruptTriggered = false;
+    }
+
+    return nextState;
+}
+
+FsmState_t do_state_two(FsmInstanceData_t* data)
+{
+
+    FsmState_t nextState = FSM_STATE_TWO;
+
+    if (interruptTriggered)
+    {
+        nextState = FSM_STATE_THREE;
+        interruptTriggered = false;
+    }
+
+    return nextState;
+}
+
+FsmState_t do_state_three(FsmInstanceData_t* data)
+{
+    FsmState_t nextState = FSM_STATE_THREE;
+
+    if (interruptTriggered)
+    {
+        nextState = FSM_STATE_FOUR;
+        interruptTriggered = false;
+    }
+
+    return nextState;
+}
+
+FsmState_t do_state_four(FsmInstanceData_t* data)
+{
+    FsmState_t nextState = FSM_STATE_FOUR;
+
+    if (interruptTriggered)
+    {
+        nextState = FSM_STATE_ONE;
+        interruptTriggered = false;
+    }
+
+    return nextState;
 }
 
 /********************************************************************************
@@ -112,6 +178,13 @@ void do_state_four(FsmInstanceData_t* data)
 void ledTask(void)
 {
     static FsmInstanceData_t data = { 0 };
+    static FsmState_t state = FSM_STATE_ONE;
 
-    fsm_run(&data);
+    state = fsm_run(state, &data);
 }
+
+void fsm_interruptTriggered(void)
+{
+    interruptTriggered = true;
+}
+
