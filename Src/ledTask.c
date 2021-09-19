@@ -44,35 +44,74 @@
 /********************************************************************************
  * public variables
  ********************************************************************************/
-FsmLedState_t g_ledState = LED_STATE_LAST;
+static FsmState_t fsm_stateCurrent = FSM_STATE_FOUR;
+static FsmState_t fsm_stateNext = FSM_STATE_ONE;
+
+typedef struct
+{
+    uint8_t payload;
+} FsmInstanceData_t;
+
+typedef void FsmStateFunc_t (FsmInstanceData_t* data);
+
+void do_state_one(FsmInstanceData_t* data);
+void do_state_two(FsmInstanceData_t* data);
+void do_state_three(FsmInstanceData_t* data);
+void do_state_four(FsmInstanceData_t* data);
+
+FsmStateFunc_t* const fsm_stateTable[FSM_NUM_STATES] =
+{
+        do_state_one,
+        do_state_two,
+        do_state_three,
+        do_state_four,
+};
+
+void fsm_run(FsmInstanceData_t* data)
+{
+    if (fsm_stateNext != fsm_stateCurrent)
+    {
+        fsm_stateCurrent = fsm_stateNext;
+        fsm_stateTable[fsm_stateCurrent](data);
+    }
+}
+
+void fsm_setNextState(FsmState_t stateNext)
+{
+    fsm_stateNext = stateNext;
+}
+
+FsmState_t fsm_getCurrentState(void)
+{
+    return fsm_stateCurrent;
+}
+
+void do_state_one(FsmInstanceData_t* data)
+{
+    gpioToggle(LED3_PORT, LED3_PIN);
+}
+
+void do_state_two(FsmInstanceData_t* data)
+{
+    gpioToggle(LED5_PORT, LED5_PIN);
+}
+
+void do_state_three(FsmInstanceData_t* data)
+{
+    gpioToggle(LED4_PORT, LED4_PIN);
+}
+
+void do_state_four(FsmInstanceData_t* data)
+{
+    gpioToggle(LED6_PORT, LED6_PIN);
+}
 
 /********************************************************************************
  * public functions
  ********************************************************************************/
 void ledTask(void)
 {
-    static FsmLedState_t ledStateOld = LED_STATE_LAST;
+    static FsmInstanceData_t data = { 0 };
 
-    /* check for FSM state changing */
-    if (g_ledState != ledStateOld)
-    {
-        /* simple state machine, state is changed by TIM16 interrupt */
-        switch (g_ledState)
-        {
-        case LED_STATE_FIRST:
-            gpioToggle(LED3_PORT, LED3_PIN);
-            break;
-        case LED_STATE_TWO:
-            gpioToggle(LED5_PORT, LED5_PIN);
-            break;
-        case LED_STATE_THREE:
-            gpioToggle(LED4_PORT, LED4_PIN);
-            break;
-        case LED_STATE_LAST:
-            gpioToggle(LED6_PORT, LED6_PIN);
-            break;
-        }
-
-        ledStateOld = g_ledState;
-    }
+    fsm_run(&data);
 }

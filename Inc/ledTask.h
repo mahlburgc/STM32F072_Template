@@ -43,17 +43,21 @@
 /********************************************************************************
  * public types and variables
  ********************************************************************************/
+/* state machine test */
 typedef enum
 {
-    LED_STATE_FIRST,
-    LED_STATE_TWO,
-    LED_STATE_THREE,
-    LED_STATE_LAST,
-} FsmLedState_t;
+    FSM_STATE_ONE,
+    FSM_STATE_TWO,
+    FSM_STATE_THREE,
+    FSM_STATE_FOUR,
+    FSM_NUM_STATES,
+} FsmState_t;
 
 /********************************************************************************
  * public function prototypes
  ********************************************************************************/
 void ledTask(void);
+void fsm_setNextState(FsmState_t stateNext);
+FsmState_t fsm_getCurrentState(void);
 
 #endif /* LED_TASK_H_ */
