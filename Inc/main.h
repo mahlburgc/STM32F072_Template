@@ -50,6 +50,8 @@
 #define LED5_PIN            GPIO_PIN_8
 #define LED6_PORT           GPIOC
 #define LED6_PIN            GPIO_PIN_9
+#define SPI2_CS_MEMS_PORT   GPIOC
+#define SPI2_CS_MEMS_PIN    GPIO_PIN_0
 
 /********************************************************************************
  * public types and variables

@@ -1,7 +1,7 @@
 /********************************************************************************
- * @file           : serialCom.h
+ * @file           : ledTask.h
  * @author         : Christian Mahlburg
- * @date           : 23.06.2020
+ * @date           : 20.06.2020
  * @brief          :
  *
  ********************************************************************************
@@ -28,44 +28,32 @@
  * SOFTWARE.
  *
  ********************************************************************************/
-#ifndef SERIAL_COM_H_
-#define SERIAL_COM_H_
+#ifndef LED_TASK_H_
+#define LED_TASK_H_
 
 /********************************************************************************
  * includes
  ********************************************************************************/
-#include "stdint.h"
-#include "misc.h"
 
 /********************************************************************************
  * defines
  ********************************************************************************/
-#define RX_BUFFER_SIZE 1
+#define LED_RX_BUFFER_SIZE 80
 
 /********************************************************************************
  * public types and variables
  ********************************************************************************/
-/**
- * @brief USART rxBuffer type for interrupt reception
- */
-typedef struct
+typedef enum
 {
-    uint8_t data[RX_BUFFER_SIZE];
-    uint32_t index;
-} RxBuffer_t;
-
-/**
- * @breif USART rxMsg type for received message
- */
-typedef struct
-{
-    uint8_t data[RX_BUFFER_SIZE];
-    bool rxComplete;
-} RxMsg_t;
+    LED_STATE_FIRST,
+    LED_STATE_TWO,
+    LED_STATE_THREE,
+    LED_STATE_LAST,
+} FsmLedState_t;
 
 /********************************************************************************
  * public function prototypes
  ********************************************************************************/
-void serialComTask(void);
+void ledTask(void);
 
-#endif /* SERIAL_COM_H_ */
+#endif /* LED_TASK_H_ */

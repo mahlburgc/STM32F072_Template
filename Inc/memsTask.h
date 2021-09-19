@@ -1,24 +1,25 @@
 /********************************************************************************
- * @file           : serialCom.c
+ * @file           : memsTask.h
  * @author         : Christian Mahlburg
- * @date           : 23.06.2020
- * @brief          : This file contains the serial communication task.
- *
+ * @date		   : Jul 18, 2020
+ * @brief          : This file contains the task declaration of the mems
+ *                   sensor task.
+ * 
  ********************************************************************************
  * MIT License
- *
- * Copyright (c) 2020 Christian Mahlburg
- *
+ * 
+ * Copyright (c) 2020 CMA
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,31 +29,24 @@
  * SOFTWARE.
  *
  ********************************************************************************/
+#ifndef MEMSTASK_H_
+#define MEMSTASK_H_
 
 /********************************************************************************
  * includes
  ********************************************************************************/
-#include "serialCom.h"
-#include "usart.h"
-#include "debug.h"
 
 /********************************************************************************
- * public variables
+ * defines
  ********************************************************************************/
-RxMsg_t g_rxMsg = { 0 };
 
 /********************************************************************************
- * public functions
+ * public types and variables
  ********************************************************************************/
-/**
- * @brief This task manages the serial communication
- */
-void serialComTask(void)
-{
-    /* check for incoming message */
-    if (true == g_rxMsg.rxComplete)
-    {
-        g_rxMsg.rxComplete = false;
-        printArg((char*)g_rxMsg.data);
-    }
-}
+
+/********************************************************************************
+ * public function prototypes
+ ********************************************************************************/
+void memsSensorTask(void);
+
+#endif /* MEMSTASK_H_ */
