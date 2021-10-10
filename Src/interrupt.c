@@ -80,7 +80,7 @@ void USART1_IRQHandler(void)
     /* check overrun error flag */
     if (USART_ISR_ORE == (USART1->ISR & USART_ISR_ORE))
     {
-        ERROR(g_err.ERR_USART1_BUFFER_OVERFLOW);
+        ERROR(ERR_USART1_BUFFER_OVERFLOW);
         USART1->ICR |= USART_ICR_ORECF;
     }
 

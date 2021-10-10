@@ -35,14 +35,75 @@
 #include "Error.h"
 
 /********************************************************************************
+ * foreward declarations
+ ********************************************************************************/
+void sevHandler(Err_t err);
+
+/********************************************************************************
  * public variables
  ********************************************************************************/
 /**
- * @brief global error list
- *        This list contains all global errors.
+ * @brief error list
+ *        This list contains the definition of all errors.
  */
-Err_t g_err =
+ErrType_t errTable[NUM_OF_ERRORS] =
 {
-    .ERR_OK                     = { 0x00, "NO ERROR" },
-    .ERR_USART1_BUFFER_OVERFLOW = { 0x10, "USART1 BUFFER OVERFLOW" },
+    [ERR_OK]                     = { 0x00, ERR_SEV_LOW, "NO ERROR" },
+    [ERR_USART1_BUFFER_OVERFLOW] = { 0x10, ERR_SEV_HIGH, "USART1 BUFFER OVERFLOW" },
 };
+
+/********************************************************************************
+ * private functions
+ ********************************************************************************/
+/**
+ * @brief Handle the error severity.
+ */
+void sevHandler(Err_t err)
+{
+    switch (errTable[err].severity)
+    {
+    case ERR_SEV_LOW:
+        break;
+
+    case ERR_SEV_MID:
+        break;
+
+    case ERR_SEV_HIGH:
+        __disable_irq();
+        while (1)
+        {
+            __BKPT(0xBE); /* dead end, device may not run as intended, e.g. error messages are not shown on terminal */
+        }
+        break;
+    }
+}
+
+/********************************************************************************
+ * public functions
+ ********************************************************************************/
+/**
+ * @brief error handler, this handler can be called with ERROR(x) macro to reduce argument list.
+ */
+void errHandler(Err_t err, uint8_t* file, uint32_t line)
+{
+    ASSERT(0U != errTable[err].msg);
+
+    if (ERR_OK != err)
+    {
+        sevHandler(err);
+        printArg("[ERROR 0x%2X]\t \"%s\" in file %s, line %d\r\n", errTable[err].id, errTable[err].msg, file, line);
+    }
+}
+
+/**
+ * @brief If an assertion fails, file and line is transmitted to debug usart
+ *        and program is halted.
+ */
+void assertFailed(uint8_t* file, uint32_t line)
+{
+    __disable_irq();
+    while (1)
+    {
+        __BKPT(0xBE); /* value 0xBE is ignored */
+    }
+}
