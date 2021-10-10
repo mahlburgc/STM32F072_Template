@@ -40,36 +40,28 @@
 #include "debug.h"
 #include "misc.h"
 #include "tim.h"
+#include "Fsm.h"
 
 /********************************************************************************
  * public variables
  ********************************************************************************/
 bool interruptTriggered = false;
 
-/* state machine test */
 typedef enum
 {
-    FSM_STATE_ONE,
-    FSM_STATE_TWO,
-    FSM_STATE_THREE,
-    FSM_STATE_FOUR,
+    FSM_LED_STATE_ONE = 0,
+    FSM_LED_STATE_TWO,
+    FSM_LED_STATE_THREE,
+    FSM_LED_STATE_FOUR,
     /* do not use as state */
-    NUM_OF_FSM_STATES,
-} FsmStateName_t;
-
-typedef struct
-{
-    uint8_t payload;
-} FsmInstanceData_t;
-
-/* fsm core prototype */
-FsmStateName_t fsmRun(FsmStateName_t stateCurrent, FsmInstanceData_t* data);
+    NUM_OF_FSM_LED_STATES,
+} FsmLedStateId_t;
 
 /* state event function prototypes */
-FsmStateName_t eventOne(FsmInstanceData_t* data);
-FsmStateName_t eventTwo(FsmInstanceData_t* data);
-FsmStateName_t eventThree(FsmInstanceData_t* data);
-FsmStateName_t eventFour(FsmInstanceData_t* data);
+void* eventOne(FsmInstanceData_t* data);
+void* eventTwo(FsmInstanceData_t* data);
+void* eventThree(FsmInstanceData_t* data);
+void* eventFour(FsmInstanceData_t* data);
 
 /* on entry function prototypes */
 void onEntryOne(FsmInstanceData_t* data);
@@ -77,47 +69,13 @@ void onEntryTwo(FsmInstanceData_t* data);
 void onEntryThree(FsmInstanceData_t* data);
 void onEntryFour(FsmInstanceData_t* data);
 
-/* function pointer */
-typedef FsmStateName_t FsmEventFunc_t(FsmInstanceData_t* data);
-typedef void           FsmOnEntryFunc_t(FsmInstanceData_t* data);
-typedef void           FsmOnExitFunc_t(FsmInstanceData_t* data);
-
-typedef struct
+FsmState_t fsmTable[NUM_OF_FSM_LED_STATES] =
 {
-    FsmEventFunc_t*   const event;
-    FsmOnEntryFunc_t* const onEntry;
-    FsmOnExitFunc_t*  const onExit;
-} FsmState_t;
-
-FsmState_t const fsmTable[NUM_OF_FSM_STATES] =
-{
-    [FSM_STATE_ONE]    = { eventOne,   onEntryOne,   NULL },
-    [FSM_STATE_TWO]    = { eventTwo,   onEntryTwo,   NULL },
-    [FSM_STATE_THREE]  = { eventThree, onEntryThree, NULL },
-    [FSM_STATE_FOUR]   = { eventFour,  onEntryFour,  NULL },
+    [FSM_LED_STATE_ONE]    = { eventOne,   onEntryOne,   NULL },
+    [FSM_LED_STATE_TWO]    = { eventTwo,   onEntryTwo,   NULL },
+    [FSM_LED_STATE_THREE]  = { eventThree, onEntryThree, NULL },
+    [FSM_LED_STATE_FOUR]   = { eventFour,  onEntryFour,  NULL },
  };
-
-/**
- * @brief fsm core handles the fsm states
- */
-FsmStateName_t fsmRun(FsmStateName_t stateCurrent, FsmInstanceData_t* data)
-{
-    FsmStateName_t stateNext = fsmTable[stateCurrent].event(data);
-
-    if (stateNext != stateCurrent)
-    {
-        if (NULL != fsmTable[stateCurrent].onExit)
-        {
-            fsmTable[stateCurrent].onExit(data);
-        }
-        if (NULL != fsmTable[stateCurrent].onEntry)
-        {
-            fsmTable[stateCurrent].onEntry(data);
-        }
-    }
-
-    return stateNext;
-}
 
 /* on entry functions */
 void onEntryOne(FsmInstanceData_t* data)
@@ -141,53 +99,52 @@ void onEntryFour(FsmInstanceData_t* data)
 }
 
 /* state event functions*/
-FsmStateName_t eventOne(FsmInstanceData_t* data)
+void* eventOne(FsmInstanceData_t* data)
 {
-    FsmStateName_t nextState = FSM_STATE_ONE;
+    FsmState_t* nextState = &fsmTable[FSM_LED_STATE_ONE];
 
     if (interruptTriggered)
     {
-        nextState = FSM_STATE_TWO;
+        nextState = &fsmTable[FSM_LED_STATE_TWO];
         interruptTriggered = false;
     }
 
     return nextState;
 }
 
-FsmStateName_t eventTwo(FsmInstanceData_t* data)
+void* eventTwo(FsmInstanceData_t* data)
 {
-
-    FsmStateName_t nextState = FSM_STATE_TWO;
+    FsmState_t* nextState = &fsmTable[FSM_LED_STATE_TWO];
 
     if (interruptTriggered)
     {
-        nextState = FSM_STATE_THREE;
+        nextState = &fsmTable[FSM_LED_STATE_THREE];
         interruptTriggered = false;
     }
 
     return nextState;
 }
 
-FsmStateName_t eventThree(FsmInstanceData_t* data)
+void* eventThree(FsmInstanceData_t* data)
 {
-    FsmStateName_t nextState = FSM_STATE_THREE;
+    FsmState_t* nextState = &fsmTable[FSM_LED_STATE_THREE];
 
     if (interruptTriggered)
     {
-        nextState = FSM_STATE_FOUR;
+        nextState = &fsmTable[FSM_LED_STATE_FOUR];
         interruptTriggered = false;
     }
 
     return nextState;
 }
 
-FsmStateName_t eventFour(FsmInstanceData_t* data)
+void* eventFour(FsmInstanceData_t* data)
 {
-    FsmStateName_t nextState = FSM_STATE_FOUR;
+    FsmState_t* nextState = &fsmTable[FSM_LED_STATE_FOUR];
 
     if (interruptTriggered)
     {
-        nextState = FSM_STATE_ONE;
+        nextState = &fsmTable[FSM_LED_STATE_ONE];
         interruptTriggered = false;
     }
 
@@ -200,7 +157,7 @@ FsmStateName_t eventFour(FsmInstanceData_t* data)
 void ledTask(void)
 {
     static FsmInstanceData_t data = { 0 };
-    static FsmStateName_t   state = FSM_STATE_ONE;
+    static FsmState_t*      state = &fsmTable[FSM_LED_STATE_ONE];
 
     state = fsmRun(state, &data);
 }
