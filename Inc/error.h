@@ -59,6 +59,7 @@ typedef enum
 {
     ERR_OK,
     ERR_USART1_BUFFER_OVERFLOW,
+    ERR_USART1_FRAMIG_OR_NOISE,
     /* do not use as error */
     NUM_OF_ERRORS,
 } Err_t;

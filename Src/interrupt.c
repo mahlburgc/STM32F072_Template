@@ -76,6 +76,7 @@ void TIM16_IRQHandler(void)
 void USART1_IRQHandler(void)
 {
     static RxBuffer_t rxBuffer = { 0 };
+    uint8_t rxChar = 0;
 
     /* check overrun error flag */
     if (USART_ISR_ORE == (USART1->ISR & USART_ISR_ORE))
@@ -84,17 +85,44 @@ void USART1_IRQHandler(void)
         USART1->ICR |= USART_ICR_ORECF;
     }
 
-    /* check rx not empty flag */
+    /* check framing and noise error flag */
+    if ((USART_ISR_FE == (USART1->ISR & USART_ISR_FE)) ||
+        (USART_ISR_NE == (USART1->ISR & USART_ISR_NE)))
+    {
+        ERROR(ERR_USART1_FRAMIG_OR_NOISE);
+        USART1->ICR |= (USART_ISR_FE | USART_ISR_NE);
+    }
+
+    /* check rx not empty flag
+     * TODO creating a queue to collect more data if spamed from terminal without
+     * destroying the actual data
+     */
     if (USART_ISR_RXNE == (USART1->ISR & USART_ISR_RXNE))
     {
-        rxBuffer.data[rxBuffer.index] = USART1->RDR;
-        rxBuffer.index++;
+        rxChar = USART1->RDR;
 
-        if (rxBuffer.index == ARRAY_LEN(rxBuffer.data))
+        if (rxChar == '\n')
         {
             rxBuffer.index = 0;
             memcpy(g_rxMsg.data, rxBuffer.data, sizeof(g_rxMsg.data));
+            memset(rxBuffer.data, 0x00, sizeof(rxBuffer.data));
             g_rxMsg.rxComplete = true;
+        }
+        else if (rxChar == '\b')
+        {
+            if (rxBuffer.index > 0)
+            {
+                rxBuffer.index--;
+                rxBuffer.data[rxBuffer.index] = 0;
+            }
+        }
+        else
+        {
+            if (rxBuffer.index < sizeof(rxBuffer.data))
+            {
+                rxBuffer.data[rxBuffer.index] = rxChar;
+                rxBuffer.index++;
+            }
         }
     }
 }
