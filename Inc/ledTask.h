@@ -43,21 +43,11 @@
 /********************************************************************************
  * public types and variables
  ********************************************************************************/
-/* state machine test */
-typedef enum
-{
-    FSM_STATE_ONE,
-    FSM_STATE_TWO,
-    FSM_STATE_THREE,
-    FSM_STATE_FOUR,
-    FSM_NUM_STATES,
-} FsmState_t;
 
 /********************************************************************************
  * public function prototypes
  ********************************************************************************/
 void ledTask(void);
 void fsm_interruptTriggered(void);
-FsmState_t fsm_getCurrentState(void);
 
 #endif /* LED_TASK_H_ */
