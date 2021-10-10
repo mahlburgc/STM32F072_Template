@@ -50,7 +50,44 @@
 #include "cmsis_gcc.h"
 
 /********************************************************************************
- * defines
+ * public types and variables
+ ********************************************************************************/
+/**
+ * @brief Enum contains all available errors.
+ */
+typedef enum
+{
+    ERR_OK,
+    ERR_USART1_BUFFER_OVERFLOW,
+    /* do not use as error */
+    NUM_OF_ERRORS,
+} Err_t;
+
+typedef enum
+{
+    ERR_SEV_LOW,
+    ERR_SEV_MID,
+    ERR_SEV_HIGH
+} ErrSeverity_t;
+
+/**
+ * @brief Definition of an error type with id, severity level and error message.
+ */
+typedef struct
+{
+    uint32_t id;
+    ErrSeverity_t severity;
+    const char* const msg;
+} ErrType_t;
+
+/********************************************************************************
+ * function prototypes
+ ********************************************************************************/
+void assertFailed(uint8_t* file, uint32_t line);
+void errHandler(Err_t err, uint8_t* file, uint32_t line);
+
+/********************************************************************************
+ * user macros
  ********************************************************************************/
 /**
  * @brief ERROR
@@ -58,7 +95,7 @@
  *        This define can be used by user to call error handler with an occured error,
  *        e.g. ERROR(ERR_USART1_BUFFER_OVERFLOW)
  */
-#define ERROR(x) (errorHandler(x, (uint8_t*)__FILE__, __LINE__))
+#define ERROR(x) (errHandler(x, (uint8_t*)__FILE__, __LINE__))
 
 /**
  * @brief Use assertions during development process for logical / programming errors.
@@ -69,64 +106,5 @@
 #define ASSERT(x) ((void)0U)
 #endif
 
-/********************************************************************************
- * public types and variables
- ********************************************************************************/
-/**
- * @brief Definition of an error type with id an error message.
- */
-typedef struct
-{
-    uint32_t id;
-    const char* const msg;
-} ErrType_t;
-
-/**
- * @brief Error struct containing all available errors.
- *        Struct initialization is done in error.c.
- */
-typedef struct
-{
-    const ErrType_t ERR_OK;
-    const ErrType_t ERR_USART1_BUFFER_OVERFLOW;
-} Err_t;
-
-/**
- * @brief global error list with all available errors.
- */
-extern Err_t g_err;
-
-
-/********************************************************************************
- * public function prototypes
- ********************************************************************************/
-
-/********************************************************************************
- * inline functions
- ********************************************************************************/
-/**
- * @brief If an assertion fails, file and line is transmitted to debug usart
- *        and program is halted.
- */
-#ifdef DEBUG
-static inline void assertFailed(uint8_t* file, uint32_t line)
-{
-    printArg("ASSERT: file %s on line %d\r\n", file, line);
-    __BKPT(0xBE); /* value 0xBE is ignored */
-}
-#endif
-
-/**
- * @brief error handler, this handler can be called with ERROR(x) macro to reduce argument list.
- */
-static inline void errorHandler(ErrType_t err, uint8_t* file, uint32_t line)
-{
-    ASSERT(0U != err.msg);
-
-    if (err.id != g_err.ERR_OK.id)
-    {
-        printArg("[ERROR 0x%2X]\t \"%s\" in file %s, line %d\r\n", err.id, err.msg, file, line);
-    }
-}
 
 #endif /* ERROR_H_ */
