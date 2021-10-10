@@ -40,39 +40,130 @@
 #include "debug.h"
 #include "misc.h"
 #include "tim.h"
+#include "Fsm.h"
 
 /********************************************************************************
  * public variables
  ********************************************************************************/
-FsmLedState_t g_ledState = LED_STATE_LAST;
+bool interruptTriggered = false;
+
+typedef enum
+{
+    FSM_LED_STATE_ONE = 0,
+    FSM_LED_STATE_TWO,
+    FSM_LED_STATE_THREE,
+    FSM_LED_STATE_FOUR,
+    /* do not use as state */
+    NUM_OF_FSM_LED_STATES,
+} FsmLedStateId_t;
+
+/* state event function prototypes */
+void* eventOne(FsmInstanceData_t* data);
+void* eventTwo(FsmInstanceData_t* data);
+void* eventThree(FsmInstanceData_t* data);
+void* eventFour(FsmInstanceData_t* data);
+
+/* on entry function prototypes */
+void onEntryOne(FsmInstanceData_t* data);
+void onEntryTwo(FsmInstanceData_t* data);
+void onEntryThree(FsmInstanceData_t* data);
+void onEntryFour(FsmInstanceData_t* data);
+
+FsmState_t fsmTable[NUM_OF_FSM_LED_STATES] =
+{
+    [FSM_LED_STATE_ONE]    = { eventOne,   onEntryOne,   NULL },
+    [FSM_LED_STATE_TWO]    = { eventTwo,   onEntryTwo,   NULL },
+    [FSM_LED_STATE_THREE]  = { eventThree, onEntryThree, NULL },
+    [FSM_LED_STATE_FOUR]   = { eventFour,  onEntryFour,  NULL },
+ };
+
+/* on entry functions */
+void onEntryOne(FsmInstanceData_t* data)
+{
+    gpioToggle(LED5_PORT, LED5_PIN);
+}
+
+void onEntryTwo(FsmInstanceData_t* data)
+{
+    gpioToggle(LED4_PORT, LED4_PIN);
+}
+
+void onEntryThree(FsmInstanceData_t* data)
+{
+    gpioToggle(LED6_PORT, LED6_PIN);
+}
+
+void onEntryFour(FsmInstanceData_t* data)
+{
+    gpioToggle(LED3_PORT, LED3_PIN);
+}
+
+/* state event functions*/
+void* eventOne(FsmInstanceData_t* data)
+{
+    FsmState_t* nextState = &fsmTable[FSM_LED_STATE_ONE];
+
+    if (interruptTriggered)
+    {
+        nextState = &fsmTable[FSM_LED_STATE_TWO];
+        interruptTriggered = false;
+    }
+
+    return nextState;
+}
+
+void* eventTwo(FsmInstanceData_t* data)
+{
+    FsmState_t* nextState = &fsmTable[FSM_LED_STATE_TWO];
+
+    if (interruptTriggered)
+    {
+        nextState = &fsmTable[FSM_LED_STATE_THREE];
+        interruptTriggered = false;
+    }
+
+    return nextState;
+}
+
+void* eventThree(FsmInstanceData_t* data)
+{
+    FsmState_t* nextState = &fsmTable[FSM_LED_STATE_THREE];
+
+    if (interruptTriggered)
+    {
+        nextState = &fsmTable[FSM_LED_STATE_FOUR];
+        interruptTriggered = false;
+    }
+
+    return nextState;
+}
+
+void* eventFour(FsmInstanceData_t* data)
+{
+    FsmState_t* nextState = &fsmTable[FSM_LED_STATE_FOUR];
+
+    if (interruptTriggered)
+    {
+        nextState = &fsmTable[FSM_LED_STATE_ONE];
+        interruptTriggered = false;
+    }
+
+    return nextState;
+}
 
 /********************************************************************************
  * public functions
  ********************************************************************************/
 void ledTask(void)
 {
-    static FsmLedState_t ledStateOld = LED_STATE_LAST;
+    static FsmInstanceData_t data = { 0 };
+    static FsmState_t*      state = &fsmTable[FSM_LED_STATE_ONE];
 
-    /* check for FSM state changing */
-    if (g_ledState != ledStateOld)
-    {
-        /* simple state machine, state is changed by TIM16 interrupt */
-        switch (g_ledState)
-        {
-        case LED_STATE_FIRST:
-            gpioToggle(LED3_PORT, LED3_PIN);
-            break;
-        case LED_STATE_TWO:
-            gpioToggle(LED5_PORT, LED5_PIN);
-            break;
-        case LED_STATE_THREE:
-            gpioToggle(LED4_PORT, LED4_PIN);
-            break;
-        case LED_STATE_LAST:
-            gpioToggle(LED6_PORT, LED6_PIN);
-            break;
-        }
-
-        ledStateOld = g_ledState;
-    }
+    state = fsmRun(state, &data);
 }
+
+void fsm_interruptTriggered(void)
+{
+    interruptTriggered = true;
+}
+
