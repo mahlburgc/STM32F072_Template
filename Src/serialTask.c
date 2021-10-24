@@ -53,6 +53,6 @@ void serialComTask(void)
     if (true == g_rxMsg.rxComplete)
     {
         g_rxMsg.rxComplete = false;
-        printArg((char*)g_rxMsg.data);
+        printArg("RX: %s\r\n", (char*)g_rxMsg.data);
     }
 }

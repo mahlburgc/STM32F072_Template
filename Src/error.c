@@ -50,7 +50,7 @@ ErrType_t errTable[NUM_OF_ERRORS] =
 {
     [ERR_OK]                     = { 0x00, ERR_SEV_LOW,  "NO ERROR"                      },
     [ERR_USART1_BUFFER_OVERFLOW] = { 0x10, ERR_SEV_HIGH, "USART1 BUFFER OVERFLOW"        }, /* severity high,error messages may not be send anymore */
-    [ERR_USART1_FRAMIG_OR_NOISE] = { 0x11, ERR_SEV_HIGH, "USART1 FRAMING OR NOISE ERROR" }, /* severity high,error messages may not be send anymore */
+    [ERR_USART1_FRAMIG_OR_NOISE] = { 0x11, ERR_SEV_LOW, "USART1 FRAMING OR NOISE ERROR" },
 };
 
 /********************************************************************************

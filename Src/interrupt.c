@@ -108,6 +108,10 @@ void USART1_IRQHandler(void)
             memset(rxBuffer.data, 0x00, sizeof(rxBuffer.data));
             g_rxMsg.rxComplete = true;
         }
+        else if (rxChar == '\r')
+        {
+            /* ignore */
+        }
         else if (rxChar == '\b')
         {
             if (rxBuffer.index > 0)
