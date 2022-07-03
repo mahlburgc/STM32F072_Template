@@ -40,12 +40,6 @@
 #include "debug.h"
 #include "misc.h"
 #include "tim.h"
-#include "Fsm.h"
-
-/********************************************************************************
- * public variables
- ********************************************************************************/
-bool interruptTriggered = false;
 
 typedef enum
 {
@@ -55,21 +49,40 @@ typedef enum
     FSM_LED_STATE_FOUR,
     /* do not use as state */
     NUM_OF_FSM_LED_STATES,
-} FsmLedStateId_t;
+} FsmStateId_t;
+
+typedef struct
+{
+    uint8_t payload;
+} FsmData_t;
+
+/* function pointer */
+typedef FsmStateId_t FsmEventFunc_t(FsmData_t* data);
+typedef void FsmOnEntryFunc_t(FsmData_t* data);
+typedef void FsmOnExitFunc_t(FsmData_t* data);
+
+typedef struct
+{
+    FsmEventFunc_t* const event;
+    FsmOnEntryFunc_t* const onEntry;
+    FsmOnExitFunc_t* const onExit;
+} FsmState_t;
 
 /* state event function prototypes */
-void* eventOne(FsmInstanceData_t* data);
-void* eventTwo(FsmInstanceData_t* data);
-void* eventThree(FsmInstanceData_t* data);
-void* eventFour(FsmInstanceData_t* data);
+static FsmStateId_t eventOne(FsmData_t* data);
+static FsmStateId_t eventTwo(FsmData_t* data);
+static FsmStateId_t eventThree(FsmData_t* data);
+static FsmStateId_t eventFour(FsmData_t* data);
 
 /* on entry function prototypes */
-void onEntryOne(FsmInstanceData_t* data);
-void onEntryTwo(FsmInstanceData_t* data);
-void onEntryThree(FsmInstanceData_t* data);
-void onEntryFour(FsmInstanceData_t* data);
+static void onEntryOne(FsmData_t* data);
+static void onEntryTwo(FsmData_t* data);
+static void onEntryThree(FsmData_t* data);
+static void onEntryFour(FsmData_t* data);
 
-FsmState_t fsmTable[NUM_OF_FSM_LED_STATES] =
+static FsmStateId_t fsmRun(const FsmStateId_t stateCurrent, FsmData_t* data);
+
+static FsmState_t fsmTable[NUM_OF_FSM_LED_STATES] =
 {
     [FSM_LED_STATE_ONE]    = { eventOne,   onEntryOne,   NULL },
     [FSM_LED_STATE_TWO]    = { eventTwo,   onEntryTwo,   NULL },
@@ -77,78 +90,108 @@ FsmState_t fsmTable[NUM_OF_FSM_LED_STATES] =
     [FSM_LED_STATE_FOUR]   = { eventFour,  onEntryFour,  NULL },
  };
 
+bool interruptTriggered = false;
+
+/********************************************************************************
+ * private functions
+ ********************************************************************************/
+
 /* on entry functions */
-void onEntryOne(FsmInstanceData_t* data)
+static void onEntryOne(FsmData_t* data)
 {
     gpioToggle(LED5_PORT, LED5_PIN);
 }
 
-void onEntryTwo(FsmInstanceData_t* data)
+static void onEntryTwo(FsmData_t* data)
 {
     gpioToggle(LED4_PORT, LED4_PIN);
 }
 
-void onEntryThree(FsmInstanceData_t* data)
+static void onEntryThree(FsmData_t* data)
 {
     gpioToggle(LED6_PORT, LED6_PIN);
 }
 
-void onEntryFour(FsmInstanceData_t* data)
+static void onEntryFour(FsmData_t* data)
 {
     gpioToggle(LED3_PORT, LED3_PIN);
 }
 
 /* state event functions*/
-void* eventOne(FsmInstanceData_t* data)
+static FsmStateId_t eventOne(FsmData_t* data)
 {
-    FsmState_t* nextState = &fsmTable[FSM_LED_STATE_ONE];
+    FsmStateId_t nextState = FSM_LED_STATE_ONE;
 
     if (interruptTriggered)
     {
-        nextState = &fsmTable[FSM_LED_STATE_TWO];
+        nextState = FSM_LED_STATE_TWO;
         interruptTriggered = false;
     }
 
     return nextState;
 }
 
-void* eventTwo(FsmInstanceData_t* data)
+static FsmStateId_t eventTwo(FsmData_t* data)
 {
-    FsmState_t* nextState = &fsmTable[FSM_LED_STATE_TWO];
+    FsmStateId_t nextState = FSM_LED_STATE_TWO;
 
     if (interruptTriggered)
     {
-        nextState = &fsmTable[FSM_LED_STATE_THREE];
+        nextState = FSM_LED_STATE_THREE;
         interruptTriggered = false;
     }
 
     return nextState;
 }
 
-void* eventThree(FsmInstanceData_t* data)
+static FsmStateId_t eventThree(FsmData_t* data)
 {
-    FsmState_t* nextState = &fsmTable[FSM_LED_STATE_THREE];
+    FsmStateId_t nextState = FSM_LED_STATE_THREE;
 
     if (interruptTriggered)
     {
-        nextState = &fsmTable[FSM_LED_STATE_FOUR];
+        nextState = FSM_LED_STATE_FOUR;
         interruptTriggered = false;
     }
 
     return nextState;
 }
 
-void* eventFour(FsmInstanceData_t* data)
+static FsmStateId_t eventFour(FsmData_t* data)
 {
-    FsmState_t* nextState = &fsmTable[FSM_LED_STATE_FOUR];
+    FsmStateId_t nextState = FSM_LED_STATE_FOUR;
 
     if (interruptTriggered)
     {
-        nextState = &fsmTable[FSM_LED_STATE_ONE];
+        nextState = FSM_LED_STATE_ONE;
         interruptTriggered = false;
     }
 
     return nextState;
+}
+
+/**
+ * @brief fsm core handles the fsm states
+ */
+static FsmStateId_t fsmRun(const FsmStateId_t stateCurrent, FsmData_t* data)
+{
+    ASSERT(NULL != data);
+
+    FsmStateId_t stateNext = fsmTable[stateCurrent].event(data);
+
+    if (stateNext != stateCurrent)
+    {
+        if (NULL != fsmTable[stateCurrent].onExit)
+        {
+        	fsmTable[stateCurrent].onExit(data);
+        }
+        if (NULL != fsmTable[stateNext].onEntry)
+        {
+        	fsmTable[stateNext].onEntry(data);
+        }
+    }
+
+    return stateNext;
 }
 
 /********************************************************************************
@@ -156,8 +199,8 @@ void* eventFour(FsmInstanceData_t* data)
  ********************************************************************************/
 void ledTask(void)
 {
-    static FsmInstanceData_t data = { 0 };
-    static FsmState_t*      state = &fsmTable[FSM_LED_STATE_ONE];
+    static FsmData_t data = { 0 };
+    static FsmStateId_t state = FSM_LED_STATE_ONE;
 
     state = fsmRun(state, &data);
 }

@@ -208,6 +208,8 @@ int main(void)
     usartRxEnable(USART1);
     usartReceiveIT(USART1);
 
+    print("Welcome to the STM32F072 Template! UART Baut Config: 9600 8N1\r\n");
+
     while(1U)
     {
         ledTask();
