@@ -208,6 +208,9 @@ int main(void)
     usartRxEnable(USART1);
     usartReceiveIT(USART1);
 
+    /* initialize LED task state machine */
+    ledTaskInit();
+
     print("Welcome to the STM32F072 Template! UART Baud Config: 9600 8N1\r\n");
 
     while(1U)

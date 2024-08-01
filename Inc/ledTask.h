@@ -47,6 +47,7 @@
 /********************************************************************************
  * public function prototypes
  ********************************************************************************/
+void ledTaskInit(void);
 void ledTask(void);
 void fsm_interruptTriggered(void);
 
