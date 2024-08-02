@@ -33,6 +33,7 @@
  * includes
  ********************************************************************************/
 #include "ledTask.h"
+#include "fsm.h"
 #include "stdio.h"
 #include "main.h"
 #include "gpio.h"
@@ -47,48 +48,21 @@ typedef enum
     FSM_LED_STATE_TWO,
     FSM_LED_STATE_THREE,
     FSM_LED_STATE_FOUR,
-    /* do not use as state */
-    NUM_OF_FSM_LED_STATES,
 } FsmStateId_t;
 
-typedef struct
-{
-    uint8_t payload;
-} FsmData_t;
-
-/* function pointer */
-typedef FsmStateId_t FsmEventFunc_t(FsmData_t* data);
-typedef void FsmOnEntryFunc_t(FsmData_t* data);
-typedef void FsmOnExitFunc_t(FsmData_t* data);
-
-typedef struct
-{
-    FsmEventFunc_t* const event;
-    FsmOnEntryFunc_t* const onEntry;
-    FsmOnExitFunc_t* const onExit;
-} FsmState_t;
-
 /* state event function prototypes */
-static FsmStateId_t eventOne(FsmData_t* data);
-static FsmStateId_t eventTwo(FsmData_t* data);
-static FsmStateId_t eventThree(FsmData_t* data);
-static FsmStateId_t eventFour(FsmData_t* data);
+static uint8_t eventOne(void);
+static uint8_t eventTwo(void);
+static uint8_t eventThree(void);
+static uint8_t eventFour(void);
 
 /* on entry function prototypes */
-static void onEntryOne(FsmData_t* data);
-static void onEntryTwo(FsmData_t* data);
-static void onEntryThree(FsmData_t* data);
-static void onEntryFour(FsmData_t* data);
+static void onEntryOne(void);
+static void onEntryTwo(void);
+static void onEntryThree(void);
+static void onEntryFour(void);
 
-static FsmStateId_t fsmRun(const FsmStateId_t stateCurrent, FsmData_t* data);
-
-static FsmState_t fsmTable[NUM_OF_FSM_LED_STATES] =
-{
-    [FSM_LED_STATE_ONE]    = { eventOne,   onEntryOne,   NULL },
-    [FSM_LED_STATE_TWO]    = { eventTwo,   onEntryTwo,   NULL },
-    [FSM_LED_STATE_THREE]  = { eventThree, onEntryThree, NULL },
-    [FSM_LED_STATE_FOUR]   = { eventFour,  onEntryFour,  NULL },
- };
+static FsmHandle_t fsmHandle;
 
 bool interruptTriggered = false;
 
@@ -97,30 +71,30 @@ bool interruptTriggered = false;
  ********************************************************************************/
 
 /* on entry functions */
-static void onEntryOne(FsmData_t* data)
+static void onEntryOne(void)
 {
     gpioToggle(LED5_PORT, LED5_PIN);
 }
 
-static void onEntryTwo(FsmData_t* data)
+static void onEntryTwo(void)
 {
     gpioToggle(LED4_PORT, LED4_PIN);
 }
 
-static void onEntryThree(FsmData_t* data)
+static void onEntryThree(void)
 {
     gpioToggle(LED6_PORT, LED6_PIN);
 }
 
-static void onEntryFour(FsmData_t* data)
+static void onEntryFour(void)
 {
     gpioToggle(LED3_PORT, LED3_PIN);
 }
 
 /* state event functions*/
-static FsmStateId_t eventOne(FsmData_t* data)
+static uint8_t eventOne(void)
 {
-    FsmStateId_t nextState = FSM_LED_STATE_ONE;
+    uint8_t nextState = FSM_LED_STATE_ONE;
 
     if (interruptTriggered)
     {
@@ -131,9 +105,9 @@ static FsmStateId_t eventOne(FsmData_t* data)
     return nextState;
 }
 
-static FsmStateId_t eventTwo(FsmData_t* data)
+static uint8_t eventTwo(void)
 {
-    FsmStateId_t nextState = FSM_LED_STATE_TWO;
+    uint8_t nextState = FSM_LED_STATE_TWO;
 
     if (interruptTriggered)
     {
@@ -144,9 +118,9 @@ static FsmStateId_t eventTwo(FsmData_t* data)
     return nextState;
 }
 
-static FsmStateId_t eventThree(FsmData_t* data)
+static uint8_t eventThree(void)
 {
-    FsmStateId_t nextState = FSM_LED_STATE_THREE;
+    uint8_t nextState = FSM_LED_STATE_THREE;
 
     if (interruptTriggered)
     {
@@ -157,9 +131,9 @@ static FsmStateId_t eventThree(FsmData_t* data)
     return nextState;
 }
 
-static FsmStateId_t eventFour(FsmData_t* data)
+static uint8_t eventFour(void)
 {
-    FsmStateId_t nextState = FSM_LED_STATE_FOUR;
+    uint8_t nextState = FSM_LED_STATE_FOUR;
 
     if (interruptTriggered)
     {
@@ -170,39 +144,22 @@ static FsmStateId_t eventFour(FsmData_t* data)
     return nextState;
 }
 
-/**
- * @brief fsm core handles the fsm states
- */
-static FsmStateId_t fsmRun(const FsmStateId_t stateCurrent, FsmData_t* data)
-{
-    ASSERT(NULL != data);
-
-    FsmStateId_t stateNext = fsmTable[stateCurrent].event(data);
-
-    if (stateNext != stateCurrent)
-    {
-        if (NULL != fsmTable[stateCurrent].onExit)
-        {
-        	fsmTable[stateCurrent].onExit(data);
-        }
-        if (NULL != fsmTable[stateNext].onEntry)
-        {
-        	fsmTable[stateNext].onEntry(data);
-        }
-    }
-
-    return stateNext;
-}
-
 /********************************************************************************
  * public functions
  ********************************************************************************/
+void ledTaskInit(void)
+{
+    fsmInit(&fsmHandle, FSM_LED_STATE_ONE);
+
+    fsmAdd(&fsmHandle, FSM_LED_STATE_ONE, eventOne, onEntryOne, NULL);
+    fsmAdd(&fsmHandle, FSM_LED_STATE_TWO, eventTwo, onEntryTwo, NULL);
+    fsmAdd(&fsmHandle, FSM_LED_STATE_THREE, eventThree, onEntryThree, NULL);
+    fsmAdd(&fsmHandle, FSM_LED_STATE_FOUR, eventFour, onEntryFour, NULL);
+}
+
 void ledTask(void)
 {
-    static FsmData_t data = { 0 };
-    static FsmStateId_t state = FSM_LED_STATE_ONE;
-
-    state = fsmRun(state, &data);
+    fsmRun(&fsmHandle);
 }
 
 void fsm_interruptTriggered(void)
